@@ -1,4 +1,4 @@
-var MAIN = (function (gameplay, gamedraw) {
+var MAIN = (function (game) {
     "use strict";
 
     function safeWidth() {
@@ -38,10 +38,9 @@ var MAIN = (function (gameplay, gamedraw) {
                     elapsed = now - lastTime;
                 pointer.update(elapsed);
                 
-                if (gameplay) {
-                    gameplay(now, elapsed, keyboard, pointer);
-                }
-                if (!gamedraw) {
+                if (game) {
+                    game.update(now, elapsed, keyboard, pointer);
+                } else {
                     testFlip.updatePlayback(elapsed, testFlipDraw);
                 }
                 
@@ -57,8 +56,8 @@ var MAIN = (function (gameplay, gamedraw) {
             
             context.clearRect(0, 0, canvas.width, canvas.height);
             
-            if (gamedraw) {
-                gamedraw(canvs.width, canvas.height);
+            if (game) {
+                game.draw(context, canvas.width, canvas.height);
             } else if (!BLIT.isPendingBatch()) {
                 BLIT.draw(context, testImage, 100, 100, BLIT.ALIGN.Center, 0, 0, BLIT.MIRROR.Horizontal);
                 testFlip.draw(context, testFlipDraw, 200, 50, BLIT.ALIGN.Left, 0, 0, BLIT.MIRROR.Vertical);
@@ -79,4 +78,4 @@ var MAIN = (function (gameplay, gamedraw) {
 
     return {
     };
-}());
+}(new WORLD.default()));
