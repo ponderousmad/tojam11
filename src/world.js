@@ -1,17 +1,18 @@
 var WORLD = (function () {
     "use strict";
     
-    var TILE_WIDTH = 96,
-        TILE_HEIGHT = 64;
+    var TILE_WIDTH = 50,
+        TILE_HEIGHT = 40;
     
     function World(width, height) {
         this.width = width;
         this.height = height;
-        this.player = new AGENT.Player(new LINEAR.Vec(0, 0));
+        this.player = new AGENT.Player(0, 0);
         this.replayers = [];
     }
 
-    World.prototype.update = function (keyboard, pointer, now, elapsed) {
+    World.prototype.update = function (now, elapsed, keyboard, pointer) {
+        this.player.update(this, now, elapsed, keyboard, pointer);
     }
     
     World.prototype.draw = function (context, width, height) {
@@ -22,8 +23,27 @@ var WORLD = (function () {
                 
                 context.strokeRect(x + 1, y + 1, TILE_WIDTH - 2, TILE_HEIGHT - 2);
                 
+                if (this.player.isAt(i, j)) {
+                    this.player.draw(context, x, y);
+                }
             }
         }
+    }
+    
+    World.prototype.canMove = function (player, newI, newJ) {
+        if (newI < 0) {
+            return false;
+        }
+        if (newI >= this.width) {
+            return false;
+        }
+        if (newJ < 0) {
+            return false;
+        }
+        if (newJ >= this.height) {
+            return false;
+        }
+        return true;
     }
     
     function defaultWorld() {
