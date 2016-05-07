@@ -16,17 +16,49 @@ var WORLD = (function () {
             {x: 20, y: 20}
         ],
         DIRECTIONS = {
-            Up: 1,
-            Down: 2,
-            Left: 4,
-            Right: 8
+            right: 0,
+            down: Math.PI / 2,
+            left: Math.PI,
+            up: (3* Math.PI) / 2
         };
     
-    function ClockHand(i, j, direction) {
+    function ClockHand(i, j, angle, trigger) {
         this.i = i;
         this.j = j;
-        this.direction = direction;
+        this.angle = angle;
+        this.trigger = trigger;
     }
+    
+    ClockHand.prototype.draw = function (context) {
+        context.save();
+        var x = this.i * TILE_WIDTH,
+            y = this.j * TILE_WIDTH;
+        context.translate(x, y);
+        context.rotate(this.angle);
+        context.fillRect(0, -3, TILE_WIDTH, 6);
+        context.restore();
+    };
+    
+    ClockHand.prototype.blocks = function (player, newI, newJ) {
+        var iDir = Math.round(Math.cos(this.angle)),
+            jDir = Math.round(Math.sin(this.angle));
+        
+        if (iDir === 0) {
+            if (player.i === newI) {
+                return false;
+            }
+            var maxI = Math.max(player.i, newI),
+                handMinJ = jDir < 0 ? this.j - 1 : this.j;
+            return handMinJ === newJ && maxI === this.i;
+        }
+        // jDir == 0
+        if (player.j == newJ) {
+            return false;
+        }
+        var maxJ = Math.max(player.j, newJ),
+            handMinI = iDir < 0 ? this.i - 1 : this.i;
+        return handMinI === newI && maxJ === this.j;
+    };
     
     function Exit(i, j) {
         this.i = i;
@@ -51,6 +83,12 @@ var WORLD = (function () {
         this.stepTimer = null;
         this.stepDelay = 100;
         this.exit = new Exit(width - 1, height - 1);
+        this.hands = [
+            new ClockHand(2, 2, DIRECTIONS.right, null),
+            new ClockHand(3, 4, DIRECTIONS.down, null),
+            new ClockHand(4, 6, DIRECTIONS.left, null),
+            new ClockHand(5, 8, DIRECTIONS.up, null)
+        ];
     }
 
     World.prototype.update = function (now, elapsed, keyboard, pointer) {
@@ -84,6 +122,10 @@ var WORLD = (function () {
         
         this.exit.draw(context);
         
+        for (var h = 0; h < this.hands.length; ++h) {
+            this.hands[h].draw(context);
+        }
+        
         this.player.draw(context, this);
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r],
@@ -108,6 +150,13 @@ var WORLD = (function () {
         if (newJ >= this.height) {
             return false;
         }
+        
+        for (var h = 0; h < this.hands.length; ++h) {
+            if (this.hands[h].blocks(player, newI, newJ)) {
+                return false;
+            }
+        }
+        
         return true;
     };
     
