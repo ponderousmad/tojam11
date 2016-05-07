@@ -25,7 +25,8 @@ var WORLD = (function () {
             Exit: 0,
             Clockwise: 1,
             Counterclock: 2,
-            Mousetrap: 3
+            Mousetrap: 3,
+            COUNT: 4
         },
         QTURN = Math.PI / 2,
         TICK_TIME = 50;
@@ -119,7 +120,7 @@ var WORLD = (function () {
         context.translate(x, y);
         context.rotate(angle);
         if (this.persist) {
-            context.fillStyle = "rbg(0,0,127)";
+            context.fillStyle = "rgb(0,0,127)";
         }
         context.fillRect(0, -3, TILE_WIDTH, 6);
         context.restore();
@@ -243,8 +244,10 @@ var WORLD = (function () {
             
             return {
                 x: x, y: y,
-                gridI: Math.round(x), gridJ: Math.round(y),
-                squareI: Math.round(x - 0.5), squareJ: Math.round(y - 0.5)
+                gridI: Math.min(Math.round(x), this.width),
+                gridJ: Math.min(Math.round(y), this.width),
+                squareI: Math.min(Math.round(x - 0.5), this.width - 1),
+                squareJ: Math.min(Math.round(y - 0.5), this.height - 1)
             };
         }
         
@@ -332,6 +335,12 @@ var WORLD = (function () {
 
             edit.lastHand = null;
             edit.lastTrigger = null;
+        } else if (keyboard.wasAsciiPressed("T")) {
+            if (edit.lastHand !== null) {
+                edit.lastHand.persist = !edit.lastHand.persist;
+            } else if (edit.lastTrigger !== null) {
+                edit.lastTrigger.action = (edit.lastTrigger.action + 1) % TRIGGER_ACTIONS.COUNT;
+            }
         }
         return true;
     };
@@ -476,8 +485,8 @@ var WORLD = (function () {
         
         for (var h = 0; h < data.hands.length; ++h) {
             var handData = data.hands[h],
-                t = handData.trigger,
-                trigger = (t == parseInt(t, 10)) ? this.triggers[t] : null;
+                i = handData.trigger,
+                trigger = (i == parseInt(i, 10)) ? this.triggers[i] : null;
             this.hands.push(new ClockHand(handData.i, handData.j, handData.angle * QTURN, trigger, handData.persist));
         }
         
