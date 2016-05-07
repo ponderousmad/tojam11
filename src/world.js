@@ -130,6 +130,7 @@ var WORLD = (function () {
     
     function World(width, height) {
         this.loading = false;
+        this.editData = null;
         this.width = width;
         this.height = height;
         this.tileWidth = TILE_WIDTH;
@@ -153,7 +154,11 @@ var WORLD = (function () {
         if (this.loading) {
             return false;
         }
-        if (this.stepTimer !== null) {
+
+        if (this.editUpdate(now, elapsed, keyboard, pointer)) {
+            return true;
+        }
+        else if (this.stepTimer !== null) {
             this.stepTimer -= elapsed;
             
             if (this.stepTimer < 0) {
@@ -168,6 +173,63 @@ var WORLD = (function () {
             }
         } else {
             this.player.update(this, now, elapsed, keyboard, pointer);
+        }
+        return true;
+    };
+    
+    World.prototype.pointerLocation = function (pointer) {
+        var point = pointer.location();
+        
+        if (point) {
+            var x = point.x / TILE_WIDTH,
+                y = point.y / TILE_HEIGHT;
+            
+            return {
+                x: x, y: y,
+                gridI: Math.round(x), gridJ: Math.round(y),
+                squareX: Math.round(x - 0.5), squareY: Math.round(y - 0.5)
+            };
+        }
+        
+        return null;
+    };
+    
+    World.prototype.editUpdate = function (now, elapsed, keyboard, pointer) {
+        if (keyboard.wasAsciiPressed("E")) {
+            if (this.editData !== null) {
+                this.editData = null;
+            } else {
+                this.editData = {};
+            }
+        }
+        if (this.editData === null) {
+            return false;
+        }
+        var at = this.pointerLocation(pointer);
+        if (pointer.activated()) {
+            this.editData.start = at;
+        }
+        if (this.editData.editHand) {
+            if (pointer.mouse.left) {
+                var angle = Math.atan2(this.editData.start.gridJ - at.y, this.editData.start.gridI - at.x);
+                this.editData.editHand.angle = angle + Math.PI;
+            } else {
+                var halfPI = Math.PI / 2;
+                this.editData.editHand.angle = (Math.round(this.editData.editHand.angle / halfPI) % 4) * halfPI;
+                this.editData.editHand = null;
+            }
+        }
+        if (pointer.activated()) {
+            for (var h = 0; h < this.hands.length; ++h) {
+                var hand = this.hands[h];
+                if (hand.i == at.gridI && hand.j == at.gridJ) {
+                    this.editData.editHand = hand;
+                }
+            }
+            if (!this.editData.editHand) {
+                this.editData.editHand = new ClockHand(at.gridI, at.gridJ, 0, null);
+                this.hands.push(this.editData.editHand);
+            }
         }
         return true;
     };
@@ -300,10 +362,6 @@ var WORLD = (function () {
         
         this.setupPlayer();
         this.loading = false;
-    };
-    
-    World.prototype.open = function(resource) {
- 
     };
     
     function defaultWorld() {
