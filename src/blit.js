@@ -184,12 +184,17 @@ var BLIT = (function () {
     }
     
     Flip.prototype.setupPlayback = function(frameTime, loop, offset) {
-        var time = offset ? offset : 0;
+        var time = offset ? offset : 0,
+            flip = this;
         return {
             elapsed: time,
             timePerFrame: frameTime,
             fractionComplete: time / (frameTime * this.frames.length),
-            loop: loop === true
+            loop: loop === true,
+            update: function (elapsed) { flip.updatePlayback(elapsed, this); },
+            draw: function (context, x, y, alignment, width, height, mirror, tint) {
+                flip.draw(context, this, x, y, alignment, width, height, mirror, tint);
+            }
         };
     };
     
@@ -214,6 +219,12 @@ var BLIT = (function () {
         draw(context, this.frames[index], x, y, alignment, width, height, mirror, tint);
     };
     
+    function updatePlaybacks(elapsed, playbacks) {
+        for (var p = 0; p < playbacks.length; ++p) {
+            playbacks[p].update(elapsed);
+        }
+    }
+    
     return {
         ALIGN: ALIGN,
         MIRROR: MIRROR,
@@ -224,6 +235,7 @@ var BLIT = (function () {
         tinted: drawTinted,
         draw: draw,
         centeredText: drawTextCentered,
-        Flip: Flip
+        Flip: Flip,
+        updatePlaybacks : updatePlaybacks
     };
 }());

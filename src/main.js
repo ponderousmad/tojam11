@@ -19,8 +19,7 @@ var MAIN = (function (game) {
     
     var batch = new BLIT.Batch("images/"),
         testImage = batch.load("test.png"),
-        testFlip = new BLIT.Flip(batch, "test", 6, 2),
-        testFlipDraw = testFlip.setupPlayback(80, true);
+        testFlip = new BLIT.Flip(batch, "test", 6, 2).setupPlayback(80, true);
     
     (function () {
         batch.commit();
@@ -41,7 +40,7 @@ var MAIN = (function (game) {
                 if (game) {
                     game.update(now, elapsed, keyboard, pointer);
                 } else {
-                    testFlip.updatePlayback(elapsed, testFlipDraw);
+                    testFlip.update(elapsed);
                 }
                 
                 keyboard.postUpdate();
@@ -60,7 +59,7 @@ var MAIN = (function (game) {
                 game.draw(context, canvas.width, canvas.height);
             } else if (!BLIT.isPendingBatch()) {
                 BLIT.draw(context, testImage, 100, 100, BLIT.ALIGN.Center, 0, 0, BLIT.MIRROR.Horizontal);
-                testFlip.draw(context, testFlipDraw, 200, 50, BLIT.ALIGN.Left, 0, 0, BLIT.MIRROR.Vertical);
+                testFlip.draw(context, 200, 50, BLIT.ALIGN.Left, 0, 0, BLIT.MIRROR.Vertical);
             }
         }
 
