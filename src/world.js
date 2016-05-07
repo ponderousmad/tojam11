@@ -26,7 +26,9 @@ var WORLD = (function () {
             Clockwise: 1,
             Counterclock: 2,
             Mousetrap: 3
-        };
+        },
+        QTURN = Math.PI / 2;
+    
     
     function actionName(action) {
         for (var a in TRIGGER_ACTIONS) {
@@ -36,12 +38,20 @@ var WORLD = (function () {
         }
         return null;
     }
+    
+    function canonicalAngle(angle) {
+        return (Math.round(angle / QTURN) % 4) * QTURN;
+    }
 
     function Trigger(i, j, action) {
         this.i = i;
         this.j = j;
         this.action = action;
     }
+    
+    Trigger.prototype.contains = function (entity) {
+        return entity.i == this.i && entity.j == this.j;
+    };
     
     Trigger.prototype.style = function () {
         switch (this.action) {
@@ -80,7 +90,7 @@ var WORLD = (function () {
         this.trigger = trigger;
     }
     
-    ClockHand.prototype.draw = function (context) {
+    ClockHand.prototype.draw = function (context, editing) {
         context.save();
         var x = this.i * TILE_WIDTH,
             y = this.j * TILE_WIDTH;
@@ -88,6 +98,19 @@ var WORLD = (function () {
         context.rotate(this.angle);
         context.fillRect(0, -3, TILE_WIDTH, 6);
         context.restore();
+        
+        if (editing && this.trigger) {
+            var endX = (this.trigger.i + 0.5) * TILE_WIDTH,
+                endY = (this.trigger.j + 0.5) * TILE_WIDTH;
+            
+            context.save();
+            context.strokeStyle = "rgba(0,0,0,.2)";
+            context.beginPath();
+            context.moveTo(x, y);
+            context.lineTo(endX, endY);
+            context.stroke();
+            context.restore();
+        }
     };
     
     ClockHand.prototype.blocks = function (player, newI, newJ) {
@@ -126,6 +149,10 @@ var WORLD = (function () {
             }
         }
         return data;
+    };
+    
+    ClockHand.prototype.advance = function () {
+        this.angle = canonicalAngle(this.angle + QTURN);
     };
     
     function World(width, height) {
@@ -187,7 +214,7 @@ var WORLD = (function () {
             return {
                 x: x, y: y,
                 gridI: Math.round(x), gridJ: Math.round(y),
-                squareX: Math.round(x - 0.5), squareY: Math.round(y - 0.5)
+                squareI: Math.round(x - 0.5), squareJ: Math.round(y - 0.5)
             };
         }
         
@@ -205,31 +232,74 @@ var WORLD = (function () {
         if (this.editData === null) {
             return false;
         }
-        var at = this.pointerLocation(pointer);
+        var at = this.pointerLocation(pointer),
+            edit = this.editData;
         if (pointer.activated()) {
-            this.editData.start = at;
+            edit.start = at;
         }
-        if (this.editData.editHand) {
-            if (pointer.mouse.left) {
-                var angle = Math.atan2(this.editData.start.gridJ - at.y, this.editData.start.gridI - at.x);
-                this.editData.editHand.angle = angle + Math.PI;
+        if (edit.hand) {
+            if (pointer.primary) {
+                var angle = Math.atan2(edit.start.gridJ - at.y, edit.start.gridI - at.x);
+                edit.hand.angle = angle + Math.PI;
             } else {
-                var halfPI = Math.PI / 2;
-                this.editData.editHand.angle = (Math.round(this.editData.editHand.angle / halfPI) % 4) * halfPI;
-                this.editData.editHand = null;
+                edit.hand.angle = canonicalAngle(edit.hand.angle);
+                edit.lastHand = edit.hand;
+                edit.hand = null;
             }
         }
-        if (pointer.activated()) {
-            for (var h = 0; h < this.hands.length; ++h) {
-                var hand = this.hands[h];
-                if (hand.i == at.gridI && hand.j == at.gridJ) {
-                    this.editData.editHand = hand;
+        else if (edit.trigger) {
+            if (pointer.primary) {
+                edit.trigger.i = at.squareI;
+                edit.trigger.j = at.squareJ;
+            } else {
+                edit.lastTrigger = edit.trigger;
+                edit.trigger = null;
+            }
+        }
+        else if (pointer.activated()) {
+            if (keyboard.isShiftDown()) {
+                for (var t = 0; t < this.triggers.length; ++t) {
+                    var trigger = this.triggers[t];
+                    if (trigger.i == at.squareI && trigger.j == at.squareJ) {
+                        edit.trigger = trigger;
+                    }
+                }
+                if (!edit.trigger) {
+                    edit.trigger = new Trigger(at.squareI, at.squareJ, TRIGGER_ACTIONS.Clockwise);
+                    this.triggers.push(edit.trigger);
+                }
+                if (edit.lastHand) {
+                    edit.lastHand.trigger = edit.trigger;
+                }
+                edit.lastHand = null;
+            } else {
+                for (var h = 0; h < this.hands.length; ++h) {
+                    var hand = this.hands[h];
+                    if (hand.i == at.gridI && hand.j == at.gridJ) {
+                        edit.hand = hand;
+                    }
+                }
+                if (!edit.hand) {
+                    edit.hand = new ClockHand(at.gridI, at.gridJ, 0, null);
+                    this.hands.push(edit.hand);
                 }
             }
-            if (!this.editData.editHand) {
-                this.editData.editHand = new ClockHand(at.gridI, at.gridJ, 0, null);
-                this.hands.push(this.editData.editHand);
+        } else if (keyboard.wasKeyPressed(IO.KEYS.Minus)) {
+            if (edit.lastHand) {
+                this.hands.splice(this.hands.indexOf(edit.lastHand), 1);
+            } else if (edit.lastTrigger) {
+                this.triggers.splice(this.triggers.indexOf(edit.lastTrigger), 1);
+
+                for (var d = 0; d < this.hands.length; ++d) {
+                    var unhand = this.hands[d];
+                    if (unhand.trigger == edit.lastTrigger) {
+                        unhand.trigger = null;
+                    }
+                }
             }
+
+            edit.lastHand = null;
+            edit.lastTrigger = null;
         }
         return true;
     };
@@ -253,7 +323,7 @@ var WORLD = (function () {
         }
         
         for (var h = 0; h < this.hands.length; ++h) {
-            this.hands[h].draw(context);
+            this.hands[h].draw(context, this.editData !== null);
         }
         
         this.player.draw(context, this);
@@ -290,8 +360,23 @@ var WORLD = (function () {
         return true;
     };
     
-    World.prototype.moved = function () {
-        this.startRestep();
+    World.prototype.moved = function (agent, isPlayer) {
+        if (isPlayer) {
+            this.startRestep();
+        }
+        for (var t = 0; t < this.triggers.length; ++t) {
+            var trigger = this.triggers[t];
+            if (trigger.contains(agent)) {
+                if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
+                    for (var h = 0; h < this.hands.length; ++h) {
+                        var hand = this.hands[h];
+                        if (hand.trigger == trigger) {
+                            hand.advance();
+                        }
+                    }
+                }
+            }
+        }
     };
     
     World.prototype.startRestep = function () {

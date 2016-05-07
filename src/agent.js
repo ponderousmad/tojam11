@@ -28,7 +28,7 @@ var AGENT = (function () {
                 if (canMove(world, this, move)) {
                     doMove(world, this, move);
                 }
-                world.moved();
+                world.moved(this, true);
             }
             return;
         }
@@ -93,6 +93,7 @@ var AGENT = (function () {
         var move = this.moves[this.moveIndex];
         if (canMove(world, this, move)) {
             doMove(world, this, move);
+            world.moved(this, false);
         }
         this.moveIndex += 1;
     };
