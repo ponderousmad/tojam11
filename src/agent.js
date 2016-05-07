@@ -24,11 +24,13 @@ var AGENT = (function () {
             this.moveTimer -= elapsed;
             if (this.moveTimer < 0) {
                 this.moveTimer = null;
-                var move = this.moves[this.moves.length - 1];
+                var move = this.moves[this.moves.length - 1],
+                    relocated = false;
                 if (canMove(world, this, move)) {
                     doMove(world, this, move);
+                    relocated = true;
                 }
-                world.moved(this, true);
+                world.moved(this, relocated, true);
             }
             return;
         }
@@ -90,11 +92,13 @@ var AGENT = (function () {
             return;
         }
         
-        var move = this.moves[this.moveIndex];
+        var move = this.moves[this.moveIndex],
+            relocated = false;
         if (canMove(world, this, move)) {
             doMove(world, this, move);
-            world.moved(this, false);
+            relocated = true;
         }
+        world.moved(this, relocated, false);
         this.moveIndex += 1;
     };
     

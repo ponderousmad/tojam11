@@ -27,7 +27,8 @@ var WORLD = (function () {
             Counterclock: 2,
             Mousetrap: 3
         },
-        QTURN = Math.PI / 2;
+        QTURN = Math.PI / 2,
+        TICK_TIME = 50;
     
     
     function actionName(action) {
@@ -82,20 +83,44 @@ var WORLD = (function () {
         };
     };
     
-    function ClockHand(i, j, angle, trigger) {
+    function ClockHand(i, j, angle, trigger, persist) {
         this.i = i;
         this.j = j;
         this.startAngle = angle;
         this.angle = angle;
         this.trigger = trigger;
+        this.persist = persist ? true : false;
+        this.tickTimer = null;
     }
+    
+    ClockHand.prototype.rewind = function () {
+        if (!this.persist) {
+            this.angle = this.startAngle;
+        }
+    };
+    
+    ClockHand.prototype.update = function (now, elapsed) {
+        if (this.tickTimer !== null) {
+            this.tickTimer -= elapsed;
+            if (this.tickTimer < 0) {
+                this.tickTimer = null;
+            }
+        }
+    };
     
     ClockHand.prototype.draw = function (context, editing) {
         context.save();
         var x = this.i * TILE_WIDTH,
-            y = this.j * TILE_WIDTH;
+            y = this.j * TILE_WIDTH,
+            angle = this.angle;
+        if (this.tickTimer !== null) {
+            angle -= QTURN * (this.tickTimer / TICK_TIME);
+        }
         context.translate(x, y);
-        context.rotate(this.angle);
+        context.rotate(angle);
+        if (this.persist) {
+            context.fillStyle = "rbg(0,0,127)";
+        }
         context.fillRect(0, -3, TILE_WIDTH, 6);
         context.restore();
         
@@ -138,7 +163,8 @@ var WORLD = (function () {
         var data = {
             i: this.i,
             j: this.j,
-            angle: this.startAngle
+            angle: Math.round(this.startAngle / QTURN),
+            rewind: this.rewind
         };
         
         if (this.trigger) {
@@ -153,6 +179,7 @@ var WORLD = (function () {
     
     ClockHand.prototype.advance = function () {
         this.angle = canonicalAngle(this.angle + QTURN);
+        this.tickTimer = TICK_TIME;
     };
     
     function World(width, height) {
@@ -201,6 +228,9 @@ var WORLD = (function () {
         } else {
             this.player.update(this, now, elapsed, keyboard, pointer);
         }
+        for (var h = 0; h < this.hands.length; ++h) {
+            this.hands[h].update(now, elapsed);
+        }
         return true;
     };
     
@@ -228,6 +258,8 @@ var WORLD = (function () {
             } else {
                 this.editData = {};
             }
+        } else if(keyboard.wasAsciiPressed("S")) {
+            console.log(this.save());
         }
         if (this.editData === null) {
             return false;
@@ -280,7 +312,7 @@ var WORLD = (function () {
                     }
                 }
                 if (!edit.hand) {
-                    edit.hand = new ClockHand(at.gridI, at.gridJ, 0, null);
+                    edit.hand = new ClockHand(at.gridI, at.gridJ, 0, null, false);
                     this.hands.push(edit.hand);
                 }
             }
@@ -360,13 +392,13 @@ var WORLD = (function () {
         return true;
     };
     
-    World.prototype.moved = function (agent, isPlayer) {
+    World.prototype.moved = function (agent, relocated, isPlayer) {
         if (isPlayer) {
             this.startRestep();
         }
         for (var t = 0; t < this.triggers.length; ++t) {
             var trigger = this.triggers[t];
-            if (trigger.contains(agent)) {
+            if (relocated && trigger.contains(agent)) {
                 if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
                     for (var h = 0; h < this.hands.length; ++h) {
                         var hand = this.hands[h];
@@ -391,6 +423,9 @@ var WORLD = (function () {
         }
         for (var r = 0; r < this.replayers.length; ++r) {
             this.replayers[r].rewind();
+        }
+        for (var h = 0; h < this.hands.length; ++h) {
+            this.hands[h].rewind();
         }
         this.replayers.push(new AGENT.Replayer(this.startI, this.startJ, this.player.moves));
         this.setupPlayer();
@@ -420,7 +455,7 @@ var WORLD = (function () {
     World.prototype.saveHands = function () {
         var data = [];
         for (var h = 0; h < this.hands.length; ++h) {
-            data.push(this.hands[h].save());
+            data.push(this.hands[h].save(this.triggers));
         }
         return data;
     };
@@ -441,19 +476,14 @@ var WORLD = (function () {
         
         for (var h = 0; h < data.hands.length; ++h) {
             var handData = data.hands[h],
-                trigger = (handData.trigger == parseInt(handData.trigger, 10)) ? this.triggers[t] : null;
-            this.hands.push(new ClockHand(handData.i, handData.j, handData.angle, trigger));
+                t = handData.trigger,
+                trigger = (t == parseInt(t, 10)) ? this.triggers[t] : null;
+            this.hands.push(new ClockHand(handData.i, handData.j, handData.angle * QTURN, trigger, handData.persist));
         }
         
         this.setupPlayer();
         this.loading = false;
     };
-    
-    function defaultWorld() {
-        var world = new World(10, 10);
-        console.log(world.save());
-        return world;
-    }
     
     function loadWorld(resource, world) {
         if (!world) {
@@ -476,7 +506,6 @@ var WORLD = (function () {
     
     return {
         World: World,
-        default: defaultWorld,
         load: loadWorld
     };
 }());

@@ -8,28 +8,46 @@
             "i": 9,
             "j": 9,
             "action": "Exit"
+        },
+        {
+            "i": 3,
+            "j": 1,
+            "action": "Clockwise"
+        },
+        {
+            "i": 2,
+            "j": 3,
+            "action": "Clockwise"
+        },
+        {
+            "i": 0,
+            "j": 5,
+            "action": "Clockwise"
         }
     ],
     "hands": [
         {
             "i": 2,
             "j": 2,
-            "angle": 0
+            "angle": 0,
+            "trigger": 1
         },
         {
             "i": 3,
             "j": 4,
-            "angle": 1.5707963267948966
+            "angle": 1,
+            "trigger": 2
         },
         {
             "i": 4,
             "j": 6,
-            "angle": 3.141592653589793
+            "angle": 2,
+            "trigger": 3
         },
         {
             "i": 5,
             "j": 8,
-            "angle": 4.71238898038469
+            "angle": 3
         }
     ]
 }
