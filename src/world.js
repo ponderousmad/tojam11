@@ -1,20 +1,8 @@
 var WORLD = (function () {
     "use strict";
     
-    var TILE_WIDTH = 40,
-        TILE_HEIGHT = 40,
-        REPLAY_OFFSETS = [
-            {x:  2, y:  2},
-            {x:  4, y:  4},
-            {x:  6, y:  6},
-            {x:  8, y:  8},
-            {x: 10, y: 10},
-            {x: 12, y: 12},
-            {x: 14, y: 14},
-            {x: 16, y: 16},
-            {x: 18, y: 18},
-            {x: 20, y: 20}
-        ],
+    var TILE_WIDTH = 60,
+        TILE_HEIGHT = 60,
         DIRECTIONS = {
             right: 0,
             down: Math.PI / 2,
@@ -29,8 +17,15 @@ var WORLD = (function () {
             COUNT: 4
         },
         QTURN = Math.PI / 2,
-        TICK_TIME = 50;
-    
+        TICK_TIME = 50,
+        batch = new BLIT.Batch("images/"),
+        tile2x2 = batch.load("floor-tile.png"),
+        handA = batch.load("clock-hand.png"),
+        handB = batch.load("clock-hand-fixed.png");
+        
+    (function () {
+        batch.commit();
+    }());
     
     function actionName(action) {
         for (var a in TRIGGER_ACTIONS) {
@@ -282,6 +277,8 @@ var WORLD = (function () {
         if (this.editUpdate(now, elapsed, keyboard, pointer)) {
             return true;
         }
+        
+        AGENT.updateAnims(elapsed);
 
         var sweeping = false;
         for (var h = 0; h < this.hands.length; ++h) {
@@ -422,16 +419,28 @@ var WORLD = (function () {
     };
     
     World.prototype.draw = function (context, width, height) {
-        if (this.loading) {
+        if (this.loading || !batch.loaded) {
             BLIT.centeredText(context, "LOADING", width / 2, height / 2);
             return;
         }
-        for (var i = 0; i < this.width; ++i) {
-            for (var j = 0; j < this.height; ++j) {
-                var x = i * TILE_WIDTH,
+        var scale = 2 * TILE_WIDTH / tile2x2.width;
+        for (var i = 0; i < this.width; i += 2) {
+            var tileWidth = TILE_WIDTH,
+                sourceX = tile2x2.width * 0.5,
+                x = i * TILE_WIDTH;
+            if ((this.width - i) != 1) {
+                tileWidth = 2 * TILE_WIDTH;
+                sourceX = tile2x2.width;
+            }
+            for (var j = 0; j < this.height; j += 2) {
+                var tileHeight = TILE_HEIGHT,
+                    sourceY = tile2x2.height * 0.5,
                     y = j * TILE_HEIGHT;
-                
-                context.strokeRect(x + 1, y + 1, TILE_WIDTH - 2, TILE_HEIGHT - 2);
+                if ((this.height - j) != 1) {
+                    tileHeight = 2 * TILE_HEIGHT;
+                    sourceY = tile2x2.height;
+                }
+                context.drawImage(tile2x2, 0, 0, sourceX, sourceY, x, y, tileWidth, tileHeight);
             }
         }
         
@@ -443,14 +452,14 @@ var WORLD = (function () {
             this.hands[h].draw(context, this.editData !== null);
         }
         
-        this.player.draw(context, this);
+        this.player.draw(context, this, scale);
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r],
                 stepFraction = null;
             if (this.stepIndex == r && this.stepTimer !== null) {
                 stepFraction = 1 - (this.stepTimer / this.stepDelay);
             }
-            replayer.draw(context, this, REPLAY_OFFSETS[r], stepFraction);
+            replayer.draw(context, this, scale, stepFraction);
         }
     };
     
@@ -529,9 +538,6 @@ var WORLD = (function () {
     };
     
     World.prototype.rewind = function () {
-        if (this.replayers.length == REPLAY_OFFSETS.length) {
-            this.replayers = this.replayers.slice(1);
-        }
         for (var r = 0; r < this.replayers.length; ++r) {
             this.replayers[r].rewind();
         }

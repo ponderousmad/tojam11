@@ -1,7 +1,12 @@
 var AGENT = (function () {
     "use strict";
     
-    var BASE_OFFSET = 5;
+    var PLAYER_FRAME_TIME = 64,
+        batch = new BLIT.Batch("images/"),
+        playerAnim = new BLIT.Flip(batch, "mouse-A-idle-", 1, 2).setupPlayback(64, true),
+        replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(64, true);
+    
+    
     
     function canMove(world, player, move) {
         return world.canMove(player, player.i + move.i, player.j + move.j);
@@ -22,6 +27,14 @@ var AGENT = (function () {
             return true;
         }
         return false;
+    }
+    
+    function draw(context, world, anim, x, y, scale) {
+        x += world.tileWidth * 0.5;
+        y += world.tileHeight * 0.5;
+        var width = anim.width(),
+            height = anim.height();
+        anim.draw(context, x, y, BLIT.ALIGN.Center, width * scale, height * scale);
     }
     
     function Player(i, j) {
@@ -81,9 +94,9 @@ var AGENT = (function () {
         return this.i == i && this.j == j;
     };
     
-    Player.prototype.draw = function (context, world) {
-        var x = this.i * world.tileWidth + BASE_OFFSET,
-            y = this.j * world.tileHeight + BASE_OFFSET,
+    Player.prototype.draw = function (context, world, imageScale) {
+        var x = this.i * world.tileWidth,
+            y = this.j * world.tileHeight,
             move = null,
             moveFraction = 0;
         
@@ -103,7 +116,7 @@ var AGENT = (function () {
             y += moveFraction * move.j * world.tileHeight;
         }
         
-        context.fillRect(x, y, 10, 10);
+        draw(context, world, playerAnim, x, y, imageScale);
     };
     
     function Replayer(i, j, moves) {
@@ -149,11 +162,10 @@ var AGENT = (function () {
         this.push = push;
     };
     
-    Replayer.prototype.draw = function (context, world, offset, moveFraction) {
+    Replayer.prototype.draw = function (context, world, imageScale, moveFraction) {
         context.save();
-        context.globalAlpha = 0.5;
-        var x = this.i * world.tileWidth + BASE_OFFSET,
-            y = this.j * world.tileHeight + BASE_OFFSET,
+        var x = this.i * world.tileWidth,
+            y = this.j * world.tileHeight,
             move = null;
         
         if (this.push !== null) {
@@ -169,13 +181,13 @@ var AGENT = (function () {
             x += world.tileWidth * move.i * moveFraction;
             y += world.tileWidth * move.j * moveFraction;
         }
-        
-        context.fillRect(x + offset.x, y + offset.y, 10, 10);
+        draw(context, world, replayerAnim, x, y, imageScale);
         context.restore();
     };
     
     return {
         Player: Player,
-        Replayer: Replayer
+        Replayer: Replayer,
+        updateAnims: function(elapsed) { BLIT.updatePlaybacks(elapsed, [playerAnim, replayerAnim]); }
     };
 }());

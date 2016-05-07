@@ -194,7 +194,9 @@ var BLIT = (function () {
             update: function (elapsed) { flip.updatePlayback(elapsed, this); },
             draw: function (context, x, y, alignment, width, height, mirror, tint) {
                 flip.draw(context, this, x, y, alignment, width, height, mirror, tint);
-            }
+            },
+            width: function () { return flip.width(); },
+            height: function () { return flip.height(); }
         };
     };
     
@@ -217,6 +219,14 @@ var BLIT = (function () {
         var index = Math.min(this.frames.length - 1, Math.floor(playback.elapsed / playback.timePerFrame));
         
         draw(context, this.frames[index], x, y, alignment, width, height, mirror, tint);
+    };
+    
+    Flip.prototype.width = function () {
+        return this.frames[0].width;
+    };
+    
+    Flip.prototype.height = function () {
+        return this.frames[0].height;
     };
     
     function updatePlaybacks(elapsed, playbacks) {

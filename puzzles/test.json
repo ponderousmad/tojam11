@@ -1,12 +1,12 @@
 {
-    "width": 10,
-    "height": 10,
+    "width": 7,
+    "height": 7,
     "startI": 0,
     "startJ": 0,
     "triggers": [
         {
-            "i": 9,
-            "j": 9,
+            "i": 6,
+            "j": 6  ,
             "action": "Exit"
         },
         {
@@ -46,7 +46,7 @@
         },
         {
             "i": 5,
-            "j": 8,
+            "j": 7,
             "angle": 3
         }
     ]
