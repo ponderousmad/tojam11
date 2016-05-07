@@ -3,18 +3,35 @@ var AGENT = (function () {
     
     var BASE_OFFSET = 5;
     
-    function Move(action, time) {
-        this.action = action;
-        this.time = time;
+    function canMove(world, player, move) {
+        return world.canMove(player, player.i + move.i, player.j + move.j);
+    }
+    
+    function doMove(world, player, move) {
+        player.i += move.i;
+        player.j += move.j;
     }
     
     function Player(i, j) {
         this.i = i;
         this.j = j;
         this.moves = [];
+        this.moveTimer = null;
     }
     
     Player.prototype.update = function (world, now, elapsed, keyboard, pointer) {
+        if (this.moveTimer) {
+            this.moveTimer -= elapsed;
+            if (this.moveTimer < 0) {
+                this.moveTimer = null;
+                var move = this.moves[this.moves.length - 1];
+                if (canMove(world, this, move)) {
+                    doMove(world, this, move);
+                }
+                world.moved();
+            }
+            return;
+        }
         if (keyboard.wasKeyPressed(IO.KEYS.Space)) {
             world.rewind(this);
         }
@@ -33,24 +50,30 @@ var AGENT = (function () {
     };
 
     Player.prototype.tryMove = function (world, iStep, jStep) {
-        var newI = this.i + iStep,
-            newJ = this.j + jStep;
-        
-        if (world.canMove(this, newI, newJ)) {
-            this.i = newI;
-            this.j = newJ;
-            
-        }
         this.moves.push({i:iStep, j:jStep});
-        world.moved();
+        this.moveTimer = world.stepDelay;
     };
 
     Player.prototype.isAt = function (i, j) {
         return this.i == i && this.j == j;
     };
     
-    Player.prototype.draw = function (context, tileWidth, tileHeight) {
-        context.fillRect(this.i * tileWidth + BASE_OFFSET, this.j * tileHeight + BASE_OFFSET, 10, 10);
+    Player.prototype.draw = function (context, world) {
+        var x = this.i * world.tileWidth + BASE_OFFSET,
+            y = this.j * world.tileHeight + BASE_OFFSET;
+            
+        if (this.moveTimer != null) {
+            var moveFraction = 1 - this.moveTimer / world.stepDelay,
+                move = this.moves[this.moves.length-1];
+            
+            if (moveFraction > 0.5 && !canMove(world, this, move)) {
+                moveFraction = 1 - moveFraction;
+            }
+            x += moveFraction * move.i * world.tileWidth;
+            y += moveFraction * move.j * world.tileHeight;
+        }
+        
+        context.fillRect(x, y, 10, 10);
     };
     
     function Replayer(i, j, moves) {
@@ -66,13 +89,10 @@ var AGENT = (function () {
         if (this.moveIndex >= this.moves.length) {
             return;
         }
-        var step = this.moves[this.moveIndex],
-            newI = this.i + step.i,
-            newJ = this.j + step.j;
         
-        if (world.canMove(this, newI, newJ)) {
-            this.i = newI;
-            this.j = newJ;    
+        var move = this.moves[this.moveIndex];
+        if (canMove(world, this, move)) {
+            doMove(world, this, move);
         }
         this.moveIndex += 1;
     };
@@ -87,20 +107,21 @@ var AGENT = (function () {
         return this.i == i && this.j == j;
     };
     
-    Replayer.prototype.draw = function (context, tileWidth, tileHeight, offset, world, stepFraction) {
+    Replayer.prototype.draw = function (context, world, offset, stepFraction) {
         context.save();
         context.globalAlpha = 0.5;
-        var x = this.i * tileWidth + BASE_OFFSET,
-            y = this.j * tileHeight + BASE_OFFSET;
+        var x = this.i * world.tileWidth + BASE_OFFSET,
+            y = this.j * world.tileHeight + BASE_OFFSET;
         
         if (stepFraction != null && this.moveIndex < this.moves.length) {
             var move = this.moves[this.moveIndex];
-            if (world.canMove(move)) {
-                x += tileWidth * move.i * stepFraction;
-                y += tileWidth * move.j * stepFraction;
+            if (!canMove(world, this, move) & stepFraction > 0.5) {
+                stepFraction = 1 - stepFraction;
             }
+            x += world.tileWidth * move.i * stepFraction;
+            y += world.tileWidth * move.j * stepFraction;
         }
-        context.fillRect(x + 5 + offset.x, y + 5 + offset.y, 10, 10);
+        context.fillRect(x + offset.x, y + offset.y, 10, 10);
         context.restore();
     };
     

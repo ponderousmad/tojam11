@@ -15,15 +15,42 @@ var WORLD = (function () {
             {x: 18, y: 18},
             {x: 20, y: 20}
         ],
-        STEP_DELAY = 100;
+        DIRECTIONS = {
+            Up: 1,
+            Down: 2,
+            Left: 4,
+            Right: 8
+        };
+    
+    function ClockHand(i, j, direction) {
+        this.i = i;
+        this.j = j;
+        this.direction = direction;
+    };
+    
+    function Exit(i, j) {
+        this.i = i;
+        this.j = j;
+    };
+    
+    Exit.prototype.draw = function (context) {
+        context.save();
+        context.fillStyle = "rgba(0,255,0,0.5)";
+        context.fillRect(this.i * TILE_WIDTH, this.j * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+        context.restore();
+    };
     
     function World(width, height) {
         this.width = width;
         this.height = height;
+        this.tileWidth = TILE_WIDTH;
+        this.tileHeight = TILE_HEIGHT;
         this.player = new AGENT.Player(0, 0);
         this.replayers = [];
         this.stepIndex = 0;
         this.stepTimer = null;
+        this.stepDelay = 100;
+        this.exit = new Exit(width - 1, height - 1);
     }
 
     World.prototype.update = function (now, elapsed, keyboard, pointer) {
@@ -37,7 +64,7 @@ var WORLD = (function () {
                     this.stepTimer = null;
                     this.stepIndex = 0;
                 } else {
-                    this.stepTimer += STEP_DELAY;
+                    this.stepTimer += this.stepDelay;
                 }
             }
         } else {
@@ -55,15 +82,16 @@ var WORLD = (function () {
             }
         }
         
+        this.exit.draw(context);
         
-        this.player.draw(context, TILE_WIDTH, TILE_HEIGHT);
+        this.player.draw(context, this);
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r],
                 stepFraction = null;
             if (this.stepIndex == r && this.stepTimer != null) {
-                stepFraction = 1 - (this.stepTimer / STEP_DELAY);
+                stepFraction = 1 - (this.stepTimer / this.stepDelay);
             }
-            replayer.draw(context, TILE_WIDTH, TILE_HEIGHT, REPLAY_OFFSETS[r], this, stepFraction);
+            replayer.draw(context, this, REPLAY_OFFSETS[r], stepFraction);
         }
     };
     
@@ -89,7 +117,7 @@ var WORLD = (function () {
     
     World.prototype.startRestep = function () {
         if (this.replayers.length > 0) {
-            this.stepTimer = STEP_DELAY;
+            this.stepTimer = this.stepDelay;
         }
     };
     
