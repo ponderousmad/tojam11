@@ -452,14 +452,21 @@ var WORLD = (function () {
             this.hands[h].draw(context, this.editData !== null);
         }
         
-        this.player.draw(context, this, scale);
-        for (var r = 0; r < this.replayers.length; ++r) {
-            var replayer = this.replayers[r],
-                stepFraction = null;
-            if (this.stepIndex == r && this.stepTimer !== null) {
-                stepFraction = 1 - (this.stepTimer / this.stepDelay);
+        for (var row = 0; row < this.height; ++row) {
+            for (var r = 0; r < this.replayers.length; ++r) {
+                var replayer = this.replayers[r],
+                    stepFraction = null;
+                if (replayer.j != row) {
+                    continue;
+                }
+                if (this.stepIndex == r && this.stepTimer !== null) {
+                    stepFraction = 1 - (this.stepTimer / this.stepDelay);
+                }
+                replayer.draw(context, this, scale, stepFraction);
             }
-            replayer.draw(context, this, scale, stepFraction);
+            if (this.player.j == row) {
+                this.player.draw(context, this, scale);
+            }
         }
     };
     
