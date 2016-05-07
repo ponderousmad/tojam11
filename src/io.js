@@ -202,6 +202,14 @@ var IO = (function (TICK, BLORT) {
         this.mouse.postUpdate();
     };
     
+    Pointer.prototype.activated = function() {
+        return this.primary != null && this.primary.isStart;
+    };
+    
+    Pointer.prototype.location = function() {
+        return this.primary;
+    };
+    
     return {
         KEYS, KEYS,
         Keyboard: Keyboard,
