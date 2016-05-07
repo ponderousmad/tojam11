@@ -8,6 +8,9 @@ var IO = (function (TICK, BLORT) {
         Right : 39,
         Space : 32,
         Escape : 27,
+        Plus : 187,
+        Minus : 189,
+        Delete : 46,
         LT : 188,
         GT : 190
     };
