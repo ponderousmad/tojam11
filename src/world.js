@@ -42,7 +42,11 @@ var WORLD = (function () {
     }
     
     function canonicalAngle(angle) {
-        return (Math.round(angle / QTURN) % 4) * QTURN;
+        var qTurns = Math.round(angle / QTURN);
+        if (qTurns < 0) {
+            qTurns += (1 + Math.ceil(qTurns / 4)) * 4;
+        }
+        return (qTurns % 4) * QTURN;
     }
 
     function Trigger(i, j, action) {
@@ -106,7 +110,9 @@ var WORLD = (function () {
             if (this.tickTimer < 0) {
                 this.tickTimer = null;
             }
+            return true;
         }
+        return false;
     };
     
     ClockHand.prototype.draw = function (context, editing) {
@@ -115,7 +121,7 @@ var WORLD = (function () {
             y = this.j * TILE_WIDTH,
             angle = this.angle;
         if (this.tickTimer !== null) {
-            angle -= QTURN * (this.tickTimer / TICK_TIME);
+            angle -= QTURN * (this.tickTimer / TICK_TIME) * this.direction();
         }
         context.translate(x, y);
         context.rotate(angle);
@@ -160,6 +166,51 @@ var WORLD = (function () {
         return handMinI === newI && maxJ === this.j;
     };
     
+    ClockHand.prototype.sweepInfo = function () {
+        var qDir = Math.round(this.angle / QTURN),
+            dir = this.direction(),
+            startI = this.i,
+            startJ = this.j,
+            sweepI = 0,
+            sweepJ = 0;
+        console.log(qDir);
+        console.log(dir);
+        if (qDir % 2 === 0) { // Horizontal
+            if (qDir === 0) {
+                sweepI = -1;
+                if (dir < 0) {
+                    startJ = this.j - 1;
+                }
+            } else {
+                startI = this.i - 1;
+                sweepI = 1;
+                if (dir > 0) {
+                    startJ = this.j - 1;
+                }
+            }
+        } else { // Vertical
+            if (qDir === 1) {
+                sweepJ = -1;
+                if (dir > 0) {
+                    startI = this.i - 1;
+                }
+            } else {
+                startJ = this.j - 1;
+                sweepJ = 1;
+                if (dir < 0) {
+                    startI = this.i - 1;
+                }
+            }
+        }
+        
+        return {
+            i: startI, j: startJ,
+            newI: startI + sweepI, newJ: startJ + sweepJ,
+            move: { i: sweepI, j: sweepJ },
+            hand: this
+        };
+    };
+    
     ClockHand.prototype.save = function (triggers) {
         var data = {
             i: this.i,
@@ -178,9 +229,29 @@ var WORLD = (function () {
         return data;
     };
     
-    ClockHand.prototype.advance = function () {
-        this.angle = canonicalAngle(this.angle + QTURN);
+    ClockHand.prototype.turn = function () {
+        var sweepInfo = this.sweepInfo();
+        this.angle = canonicalAngle(this.angle + QTURN * this.direction());
         this.tickTimer = TICK_TIME;
+        return sweepInfo;
+    };
+    
+    ClockHand.prototype.direction = function () {
+        if (this.trigger && this.trigger.action == TRIGGER_ACTIONS.Counterclock) {
+            return -1;
+        }
+        return 1;
+    };
+    
+    ClockHand.prototype.moving = function () {
+        return this.tickTimer !== null;
+    };
+    
+    ClockHand.prototype.moveFraction = function () {
+        if (this.tickTimer !== null) {
+            return 1 - (this.tickTimer / TICK_TIME);
+        }
+        return 1;
     };
     
     function World(width, height) {
@@ -213,7 +284,17 @@ var WORLD = (function () {
         if (this.editUpdate(now, elapsed, keyboard, pointer)) {
             return true;
         }
-        else if (this.stepTimer !== null) {
+
+        var sweeping = false;
+        for (var h = 0; h < this.hands.length; ++h) {
+            sweeping |= this.hands[h].update(now, elapsed);
+        }
+
+        for (var r = 0; r < this.replayers.length; ++r) {
+            this.replayers[r].update(this, now, elapsed);
+        }
+        
+        if (!sweeping && this.stepTimer !== null) {
             this.stepTimer -= elapsed;
             
             if (this.stepTimer < 0) {
@@ -227,10 +308,7 @@ var WORLD = (function () {
                 }
             }
         } else {
-            this.player.update(this, now, elapsed, keyboard, pointer);
-        }
-        for (var h = 0; h < this.hands.length; ++h) {
-            this.hands[h].update(now, elapsed);
+            this.player.update(this, sweeping, now, elapsed, keyboard, pointer);
         }
         return true;
     };
@@ -378,7 +456,7 @@ var WORLD = (function () {
         }
     };
     
-    World.prototype.canMove = function (player, newI, newJ) {
+    World.prototype.canMove = function (player, newI, newJ, skipHand) {
         if (newI < 0) {
             return false;
         }
@@ -393,7 +471,11 @@ var WORLD = (function () {
         }
         
         for (var h = 0; h < this.hands.length; ++h) {
-            if (this.hands[h].blocks(player, newI, newJ)) {
+            var hand = this.hands[h];
+            if (skipHand && skipHand == hand) {
+                continue;
+            }
+            if (hand.blocks(player, newI, newJ)) {
                 return false;
             }
         }
@@ -401,8 +483,8 @@ var WORLD = (function () {
         return true;
     };
     
-    World.prototype.moved = function (agent, relocated, isPlayer) {
-        if (isPlayer) {
+    World.prototype.moved = function (agent, relocated, playerControlled) {
+        if (playerControlled) {
             this.startRestep();
         }
         for (var t = 0; t < this.triggers.length; ++t) {
@@ -412,10 +494,31 @@ var WORLD = (function () {
                     for (var h = 0; h < this.hands.length; ++h) {
                         var hand = this.hands[h];
                         if (hand.trigger == trigger) {
-                            hand.advance();
+                            var push = hand.turn();
+                            this.sweep(push);
                         }
                     }
                 }
+            }
+        }
+    };
+    
+    World.prototype.sweep = function (push) {
+        console.log(push);
+        if (this.player.isAt(push.i, push.j)) {
+            if (this.canMove(this.player, push.newI, push.newJ, push.hand)) {
+                this.player.sweep(push);
+            } else {
+                this.squish(this.player);
+            }
+        }
+        
+        for (var r = 0; r < this.replayers.length; ++r) {
+            var replayer = this.replayers[r];
+            if (this.canMove(replayer, push.newI, push.newJ, push.hand)) {
+                replayer.sweep(push);
+            } else {
+                this.squish(replayer);
             }
         }
     };
