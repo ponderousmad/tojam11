@@ -13,7 +13,10 @@ var AGENT = (function () {
     }
     
     Player.prototype.update = function (world, now, elapsed, keyboard, pointer) {
-        if (keyboard.wasKeyPressed(IO.KEYS.Up)) {
+        if (keyboard.wasKeyPressed(IO.KEYS.Space)) {
+            world.rewind(this);
+        }
+        else if (keyboard.wasKeyPressed(IO.KEYS.Up)) {
             this.tryMove(world, 0, -1);
         }
         else if (keyboard.wasKeyPressed(IO.KEYS.Down)) {
@@ -34,7 +37,10 @@ var AGENT = (function () {
         if (world.canMove(this, newI, newJ)) {
             this.i = newI;
             this.j = newJ;
+            
         }
+        this.moves.push({i:iStep, j:jStep});
+        world.moved();
     };
 
     Player.prototype.isAt = function (i, j) {
@@ -46,14 +52,44 @@ var AGENT = (function () {
     };
     
     function Replayer(i, j, moves) {
-        this.position = pos;
+        this.i = i;
+        this.j = j;
+        this.startI = i;
+        this.startJ = j;
         this.moves = moves;
+        this.moveIndex = 0;
     }
     
-    Replayer.prototype.step = function () {
+    Replayer.prototype.step = function (world) {
+        if (this.moveIndex >= this.moves.length) {
+            return;
+        }
+        var step = this.moves[this.moveIndex],
+            newI = this.i + step.i,
+            newJ = this.j + step.j;
+        
+        if (world.canMove(this, newI, newJ)) {
+            this.i = newI;
+            this.j = newJ;    
+        }
+        this.moveIndex += 1;
     };
     
-    Replayer.prototype.draw = function (context) {
+    Replayer.prototype.rewind = function () {
+        this.moveIndex = 0;
+        this.i = this.startI;
+        this.j = this.startJ;
+    };
+
+    Replayer.prototype.isAt = function (i, j) {
+        return this.i == i && this.j == j;
+    };
+    
+    Replayer.prototype.draw = function (context, x, y, offset, yOffset) {
+        context.save();
+        context.globalAlpha = 0.5;
+        context.fillRect(x + 5 + offset.x, y + 5 + offset.y, 10, 10);
+        context.restore();
     };
     
     return {
