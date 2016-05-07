@@ -1,6 +1,8 @@
 var AGENT = (function () {
     "use strict";
     
+    var BASE_OFFSET = 5;
+    
     function Move(action, time) {
         this.action = action;
         this.time = time;
@@ -47,8 +49,8 @@ var AGENT = (function () {
         return this.i == i && this.j == j;
     };
     
-    Player.prototype.draw = function (context, x, y) {
-        context.fillRect(x + 5, y + 5, 10, 10);
+    Player.prototype.draw = function (context, tileWidth, tileHeight) {
+        context.fillRect(this.i * tileWidth + BASE_OFFSET, this.j * tileHeight + BASE_OFFSET, 10, 10);
     };
     
     function Replayer(i, j, moves) {
@@ -85,9 +87,19 @@ var AGENT = (function () {
         return this.i == i && this.j == j;
     };
     
-    Replayer.prototype.draw = function (context, x, y, offset, yOffset) {
+    Replayer.prototype.draw = function (context, tileWidth, tileHeight, offset, world, stepFraction) {
         context.save();
         context.globalAlpha = 0.5;
+        var x = this.i * tileWidth + BASE_OFFSET,
+            y = this.j * tileHeight + BASE_OFFSET;
+        
+        if (stepFraction != null && this.moveIndex < this.moves.length) {
+            var move = this.moves[this.moveIndex];
+            if (world.canMove(move)) {
+                x += tileWidth * move.i * stepFraction;
+                y += tileWidth * move.j * stepFraction;
+            }
+        }
         context.fillRect(x + 5 + offset.x, y + 5 + offset.y, 10, 10);
         context.restore();
     };

@@ -52,18 +52,18 @@ var WORLD = (function () {
                     y = j * TILE_HEIGHT;
                 
                 context.strokeRect(x + 1, y + 1, TILE_WIDTH - 2, TILE_HEIGHT - 2);
-                
-                if (this.player.isAt(i, j)) {
-                    this.player.draw(context, x, y);
-                }
-                
-                for (var r = 0; r < this.replayers.length; ++r) {
-                    var replayer = this.replayers[r];
-                    if (replayer.isAt(i, j)) {
-                        replayer.draw(context, x, y, REPLAY_OFFSETS[r]);
-                    }
-                }
             }
+        }
+        
+        
+        this.player.draw(context, TILE_WIDTH, TILE_HEIGHT);
+        for (var r = 0; r < this.replayers.length; ++r) {
+            var replayer = this.replayers[r],
+                stepFraction = null;
+            if (this.stepIndex == r && this.stepTimer != null) {
+                stepFraction = 1 - (this.stepTimer / STEP_DELAY);
+            }
+            replayer.draw(context, TILE_WIDTH, TILE_HEIGHT, REPLAY_OFFSETS[r], this, stepFraction);
         }
     };
     
