@@ -19,7 +19,9 @@ var AGENT = (function () {
                 world.moved(player, true, false);
                 player.push = null;
             }
+            return true;
         }
+        return false;
     }
     
     function Player(i, j) {

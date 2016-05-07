@@ -173,8 +173,6 @@ var WORLD = (function () {
             startJ = this.j,
             sweepI = 0,
             sweepJ = 0;
-        console.log(qDir);
-        console.log(dir);
         if (qDir % 2 === 0) { // Horizontal
             if (qDir === 0) {
                 sweepI = -1;
@@ -291,7 +289,7 @@ var WORLD = (function () {
         }
 
         for (var r = 0; r < this.replayers.length; ++r) {
-            this.replayers[r].update(this, now, elapsed);
+            sweeping |= this.replayers[r].update(this, now, elapsed);
         }
         
         if (!sweeping && this.stepTimer !== null) {
@@ -504,7 +502,6 @@ var WORLD = (function () {
     };
     
     World.prototype.sweep = function (push) {
-        console.log(push);
         if (this.player.isAt(push.i, push.j)) {
             if (this.canMove(this.player, push.newI, push.newJ, push.hand)) {
                 this.player.sweep(push);
@@ -515,10 +512,12 @@ var WORLD = (function () {
         
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r];
-            if (this.canMove(replayer, push.newI, push.newJ, push.hand)) {
-                replayer.sweep(push);
-            } else {
-                this.squish(replayer);
+            if (replayer.isAt(push.i, push.j)) {
+                if (this.canMove(replayer, push.newI, push.newJ, push.hand)) {
+                    replayer.sweep(push);
+                } else {
+                    this.squish(replayer);
+                }
             }
         }
     };
