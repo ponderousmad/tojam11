@@ -78,4 +78,4 @@ var MAIN = (function (game) {
 
     return {
     };
-}(new WORLD.default()));
+}(new WORLD.load("puzzles/test.json")));
