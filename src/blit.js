@@ -6,6 +6,7 @@ var BLIT = (function () {
         Left: 1,
         Right: 2,
         Top: 4,
+        TopLeft: 5,
         Bottom: 8
     };
     
@@ -144,9 +145,6 @@ var BLIT = (function () {
         if (flipY) {
             y = -y - height;
         }
-        
-        
-        console.log("x: " + x + " y: " + y + " + scale: (" + scaleX + ", " + scaleY + ")");
         
         if (tint) {
             drawTinted(context, image, x * scaleX, y * scaleY, width, height, tint);

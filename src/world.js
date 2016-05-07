@@ -18,10 +18,11 @@ var WORLD = (function () {
         },
         QTURN = Math.PI / 2,
         TICK_TIME = 50,
+        HAND_PIVOT = 48,
         batch = new BLIT.Batch("images/"),
         tile2x2 = batch.load("floor-tile.png"),
-        handA = batch.load("clock-hand.png"),
-        handB = batch.load("clock-hand-fixed.png");
+        handImage = batch.load("clock-hand.png"),
+        fixedHandImage = batch.load("clock-hand-fixed.png");
         
     (function () {
         batch.commit();
@@ -110,7 +111,7 @@ var WORLD = (function () {
         return false;
     };
     
-    ClockHand.prototype.draw = function (context, editing) {
+    ClockHand.prototype.draw = function (context, editing, imageScale) {
         context.save();
         var x = this.i * TILE_WIDTH,
             y = this.j * TILE_WIDTH,
@@ -120,10 +121,13 @@ var WORLD = (function () {
         }
         context.translate(x, y);
         context.rotate(angle);
+        context.scale(imageScale, imageScale);
         if (this.persist) {
             context.fillStyle = "rgb(0,0,127)";
         }
-        context.fillRect(0, -3, TILE_WIDTH, 6);
+        var image = this.trigger ? handImage : fixedHandImage,
+            tint = this.trigger ? [1.0, 0.5, 0.5] : null;
+        BLIT.draw(context, image, -HAND_PIVOT, -HAND_PIVOT, BLIT.ALIGN.TopLeft, 0, 0, BLIT.MIRROR.None, tint);
         context.restore();
         
         if (editing && this.trigger) {
@@ -449,7 +453,7 @@ var WORLD = (function () {
         }
         
         for (var h = 0; h < this.hands.length; ++h) {
-            this.hands[h].draw(context, this.editData !== null);
+            this.hands[h].draw(context, this.editData !== null, scale);
         }
         
         for (var row = 0; row < this.height; ++row) {

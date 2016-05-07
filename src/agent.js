@@ -5,8 +5,10 @@ var AGENT = (function () {
         batch = new BLIT.Batch("images/"),
         playerAnim = new BLIT.Flip(batch, "mouse-A-idle-", 1, 2).setupPlayback(64, true),
         replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(64, true);
-    
-    
+
+    (function () {
+        batch.commit();
+    }());
     
     function canMove(world, player, move) {
         return world.canMove(player, player.i + move.i, player.j + move.j);
@@ -30,6 +32,9 @@ var AGENT = (function () {
     }
     
     function draw(context, world, anim, x, y, scale) {
+        if (!batch.loaded) {
+            return;
+        }
         x += world.tileWidth * 0.5;
         y += world.tileHeight * 0.5;
         var width = anim.width(),
