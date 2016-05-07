@@ -26,12 +26,12 @@ var WORLD = (function () {
         this.i = i;
         this.j = j;
         this.direction = direction;
-    };
+    }
     
     function Exit(i, j) {
         this.i = i;
         this.j = j;
-    };
+    }
     
     Exit.prototype.draw = function (context) {
         context.save();
@@ -88,7 +88,7 @@ var WORLD = (function () {
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r],
                 stepFraction = null;
-            if (this.stepIndex == r && this.stepTimer != null) {
+            if (this.stepIndex == r && this.stepTimer !== null) {
                 stepFraction = 1 - (this.stepTimer / this.stepDelay);
             }
             replayer.draw(context, this, REPLAY_OFFSETS[r], stepFraction);
@@ -135,7 +135,7 @@ var WORLD = (function () {
     
     function defaultWorld() {
         return new World(10, 10);
-    };
+    }
     
     return {
         World: World,

@@ -62,7 +62,7 @@ var AGENT = (function () {
         var x = this.i * world.tileWidth + BASE_OFFSET,
             y = this.j * world.tileHeight + BASE_OFFSET;
             
-        if (this.moveTimer != null) {
+        if (this.moveTimer !== null) {
             var moveFraction = 1 - this.moveTimer / world.stepDelay,
                 move = this.moves[this.moves.length-1];
             
@@ -113,7 +113,7 @@ var AGENT = (function () {
         var x = this.i * world.tileWidth + BASE_OFFSET,
             y = this.j * world.tileHeight + BASE_OFFSET;
         
-        if (stepFraction != null && this.moveIndex < this.moves.length) {
+        if (stepFraction !== null && this.moveIndex < this.moves.length) {
             var move = this.moves[this.moveIndex];
             if (!canMove(world, this, move) & stepFraction > 0.5) {
                 stepFraction = 1 - stepFraction;
