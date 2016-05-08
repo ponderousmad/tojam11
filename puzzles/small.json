@@ -1,0 +1,44 @@
+{
+    "width": 4,
+    "height": 4,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 2,
+    "moveLimit": 2,
+    "triggers": [
+        {
+            "i": 3,
+            "j": 3,
+            "action": "Exit",
+            "tint": 0
+        },
+        {
+            "i": 3,
+            "j": 1,
+            "action": "Clockwise",
+            "tint": 0
+        },
+        {
+            "i": 0,
+            "j": 2,
+            "action": "Clockwise",
+            "tint": 1
+        }
+    ],
+    "hands": [
+        {
+            "i": 2,
+            "j": 2,
+            "angle": 0,
+            "persist": false,
+            "trigger": 1
+        },
+        {
+            "i": 1,
+            "j": 3,
+            "angle": 1,
+            "persist": false,
+            "trigger": 2
+        }
+    ]
+}
