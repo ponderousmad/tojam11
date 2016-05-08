@@ -58,20 +58,33 @@ var WORLD = (function () {
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01.wav"),
         tickSound = new BLORT.Noise("sounds/clockturn01.wav"),
+        deathSounds = [],
         musicTracks = [],
         music = null,
         nextTint = 0,
+        entropy = ENTROPY.makeRandom(),
         editArea = null;
         
     (function () {
         batch.commit();
-        var TRACKS = 2;
+        var TRACKS = 2, DEATHS = 2;
         for (var track = 1; track <= TRACKS; ++track) {
+            if (entropy.select(0.5)) {
+                continue;
+            }
             var tune = new BLORT.Tune("sounds/MusicLoop0" + track + ".wav");
             tune.setVolume(0.0);
             musicTracks.push(tune);
         }
+        for (var d = 1; d <= DEATHS; ++d) {
+            var noise = new BLORT.Noise("sounds/death0" + d + ".wav");
+            deathSounds.push(noise);
+        }
     }());
+    
+    function screamInPain() {
+        entropy.randomElement(deathSounds).play();
+    }
     
     function actionName(action) {
         for (var a in TRIGGER_ACTIONS) {
@@ -959,8 +972,12 @@ var WORLD = (function () {
                 }
             }
         } else if(trigger.action == TRIGGER_ACTIONS.Mousetrap) {
-            this.squish(agent);
-            this.rewinder.add(new Unsquish([agent]));
+            if (!trigger.triggered) {
+                trigger.triggered = true;
+                this.squish(agent);
+                this.rewinder.add(new Unsquish([agent]));
+                screamInPain();
+            }
         } else if(trigger.action == TRIGGER_ACTIONS.Alarm && !trigger.triggered) {
             trigger.triggered = true;
             var exits = [];
@@ -1003,6 +1020,7 @@ var WORLD = (function () {
         this.rewinder.add(new Untick(push.hand, push.direction, sweeps));
         if (squishes.length > 0) {
             this.rewinder.add(new Unsquish(squishes));
+            screamInPain();
         }
     };
     

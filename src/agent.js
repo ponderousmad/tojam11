@@ -16,7 +16,7 @@ var AGENT = (function () {
             playerAnim, playerRewind, replayerAnim, replayerRewind
         ],
         stepSounds = [],
-        stepSoundIndex = 0;
+        entropy = ENTROPY.makeRandom();
     
 
     (function () {
@@ -151,8 +151,7 @@ var AGENT = (function () {
         }
         this.walk = playerWalkFlip.setupPlayback(PLAYER_FRAME_TIME, false);
         
-        stepSounds[stepSoundIndex].play();
-        stepSoundIndex = (stepSoundIndex + 1) % stepSounds.length;
+        entropy.randomElement(stepSounds).play();
     };
     
     Player.prototype.sweep = function(push) {
@@ -280,7 +279,6 @@ var AGENT = (function () {
             anim = this.deathAnim;
             context.save();
             var splatFactor = this.deathAnim.fractionComplete;
-            console.log("Splat: " + splatFactor);
             context.globalAlpha = splatFactor;
             splatFactor *= imageScale;
             BLIT.draw(context, splatImage, x, y, BLIT.ALIGN.Center, splatImage.width * splatFactor, splatImage.height * splatFactor);
