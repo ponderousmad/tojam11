@@ -7,61 +7,48 @@
     "moveLimit": 5,
     "triggers": [
         {
-            "i": 3,
-            "j": 1,
-            "action": "Clockwise",
+            "i": 2,
+            "j": 3,
+            "action": "Exit",
             "tint": 0
         },
         {
-            "i": 2,
+            "i": 3,
             "j": 0,
-            "action": "Clockwise",
+            "action": "Alarm",
             "tint": 1
         },
         {
-            "i": 4,
-            "j": 3,
-            "action": "Mousetrap",
+            "i": 2,
+            "j": 1,
+            "action": "Clockwise",
             "tint": 2
         }
     ],
     "hands": [
         {
-            "i": 0,
-            "j": 2,
-            "angle": 0,
-            "persist": false
-        },
-        {
-            "i": 1,
-            "j": 2,
-            "angle": 0,
-            "persist": false,
-            "trigger": 0
-        },
-        {
             "i": 2,
             "j": 2,
-            "angle": 0,
-            "persist": false
+            "angle": 2,
+            "persist": false,
+            "trigger": 2
         },
         {
             "i": 3,
             "j": 2,
-            "angle": 3,
-            "persist": false,
-            "trigger": 1
-        },
-        {
-            "i": 1,
-            "j": 4,
-            "angle": 0,
+            "angle": 2,
             "persist": false
         },
         {
             "i": 1,
-            "j": 4,
-            "angle": 3,
+            "j": 2,
+            "angle": 2,
+            "persist": false
+        },
+        {
+            "i": 4,
+            "j": 2,
+            "angle": 2,
             "persist": false
         }
     ]

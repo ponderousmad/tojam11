@@ -74,4 +74,4 @@ var MAIN = (function (game) {
 
     return {
     };
-}(new WORLD.load("puzzles/blank.json")));
+}(new WORLD.load("puzzles/demo.json")));
