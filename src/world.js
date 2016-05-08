@@ -37,6 +37,8 @@ var WORLD = (function () {
         tile2x2 = batch.load("floor-tile.png"),
         panel = batch.load("panel.png"),
         handImage = batch.load("clock-hand.png"),
+        persistOverlay = batch.load("hand-persist-2.png"),
+        persistTint = batch.load("hand-persist-1.png"),
         fixedHandImage = batch.load("clock-hand-fixed.png"),
         crankImage = batch.load("crank-left.png"),
         crankImageTint = batch.load("crank-left-2.png"),
@@ -185,12 +187,12 @@ var WORLD = (function () {
         context.translate(x, y);
         context.rotate(angle);
         context.scale(imageScale, imageScale);
-        if (this.persist) {
-            context.fillStyle = "rgb(0,0,127)";
-        }
-        var image = this.trigger ? handImage : fixedHandImage,
+        var image = this.trigger ? (this.persist ? persistTint : handImage) : fixedHandImage,
             tint = this.trigger ? TINTS[this.trigger.tint] : null;
         BLIT.draw(context, image, -HAND_PIVOT, -HAND_PIVOT, BLIT.ALIGN.TopLeft, 0, 0, BLIT.MIRROR.None, tint);
+        if (this.persist && this.trigger) {
+            BLIT.draw(context, persistOverlay, -HAND_PIVOT, -HAND_PIVOT, BLIT.ALIGN.TopLeft);
+        }
         context.restore();
         
         if (editing && this.trigger) {
