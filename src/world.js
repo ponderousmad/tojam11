@@ -64,6 +64,20 @@ var WORLD = (function () {
         music = null,
         nextTint = 0,
         entropy = ENTROPY.makeRandom(),
+        puzzles = [
+            "puzzles/demo.json",
+            "puzzles/test.json"
+            /*
+            "puzzles/puzzle1.json",
+            "puzzles/puzzle2.json",
+            "puzzles/puzzle3.json",
+            "puzzles/puzzle4.json",
+            "puzzles/puzzle5.json",
+            "puzzles/puzzle6.json",
+            "puzzles/puzzle7.json"
+            */
+        ],
+        puzzleIndex = 0,
         editArea = null;
         
     (function () {
@@ -1039,7 +1053,10 @@ var WORLD = (function () {
     };
     
     World.prototype.onWin = function () {
-        
+        puzzleIndex += 1;
+        if (puzzleIndex < puzzles.length) {
+            loadWorld(puzzles[puzzleIndex], this);
+        }
     };
     
     World.prototype.startRestep = function () {
@@ -1144,8 +1161,12 @@ var WORLD = (function () {
         return world;
     }
     
+    function start() {
+        return loadWorld(puzzles[puzzleIndex]);
+    }
+    
     return {
         World: World,
-        load: loadWorld
+        start: start
     };
 }());
