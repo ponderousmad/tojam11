@@ -305,6 +305,8 @@ var WORLD = (function () {
         this.moveLimit = 5;
         this.tileWidth = TILE_WIDTH;
         this.tileHeight = TILE_HEIGHT;
+        this.xOffset = 0;
+        this.yOffset = 0;
         this.startI = 0;
         this.startJ = 0;
         this.replayers = [];
@@ -333,6 +335,14 @@ var WORLD = (function () {
     
     World.prototype.setupPlayer = function () {
         this.player = new AGENT.Player(this.startJ, this.startI);
+    };
+    
+    World.prototype.totalWidth = function () {
+        return this.width * this.tileWidth;
+    };
+    
+    World.prototype.totalHeight = function () {
+        return this.height * this.tileHeight;
     };
 
     World.prototype.update = function (now, elapsed, keyboard, pointer) {
@@ -404,8 +414,8 @@ var WORLD = (function () {
         var point = pointer.location();
         
         if (point) {
-            var x = point.x / this.tileWidth,
-                y = point.y / this.tileHeight;
+            var x = (point.x - this.xOffset) / this.tileWidth,
+                y = (point.y - this.yOffset) / this.tileHeight;
             
             return {
                 x: x, y: y,
@@ -600,9 +610,13 @@ var WORLD = (function () {
         if ((background.width / background.height) > (width / height)) {
             bgHeight = height;
             bgWidth = (height / background.height) * background.width;
-            
         }
         BLIT.draw(context, background, width * 0.5, height * 0.5, BLIT.ALIGN.Center, bgWidth, bgHeight);
+        
+        context.save();
+        this.xOffset = Math.floor((width - this.totalWidth()) / 2);
+        this.yOffset = Math.floor((height - this.totalHeight()) / 2);
+        context.translate(this.xOffset, this.yOffset);
         
         var scale = 2 * this.tileWidth / tile2x2.width;
         for (var i = 0; i < this.width; i += 2) {
@@ -649,6 +663,8 @@ var WORLD = (function () {
                 this.player.draw(context, this, scale);
             }
         }
+        
+        context.restore();
     };
     
     World.prototype.canMove = function (player, newI, newJ, skipHand) {
