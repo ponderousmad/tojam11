@@ -1,0 +1,70 @@
+{
+    "width": 7,
+    "height": 7,
+    "startI": 0,
+    "startJ": 0,
+    "triggers": [
+        {
+            "i": 5,
+            "j": 0,
+            "action": "Exit",
+            "tint": 0
+        },
+        {
+            "i": 1,
+            "j": 2,
+            "action": "Clockwise",
+            "tint": 1
+        },
+        {
+            "i": 3,
+            "j": 2,
+            "action": "Counterclock",
+            "tint": 2
+        }
+    ],
+    "hands": [
+        {
+            "i": 2,
+            "j": 2,
+            "angle": 2,
+            "trigger": 2
+        },
+        {
+            "i": 0,
+            "j": 2,
+            "angle": 0
+        },
+        {
+            "i": 3,
+            "j": 2,
+            "angle": 2
+        },
+        {
+            "i": 3,
+            "j": 3,
+            "angle": 3
+        },
+        {
+            "i": 4,
+            "j": 3,
+            "angle": 2
+        },
+        {
+            "i": 5,
+            "j": 3,
+            "angle": 2
+        },
+        {
+            "i": 5,
+            "j": 2,
+            "angle": 1
+        },
+        {
+            "i": 5,
+            "j": 1,
+            "angle": 3,
+            "trigger": 1
+        }
+    ]
+}
