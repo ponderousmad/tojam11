@@ -30,6 +30,7 @@ var WORLD = (function () {
         batch = new BLIT.Batch("images/"),
         background = batch.load("bg.png"),
         tile2x2 = batch.load("floor-tile.png"),
+        panel = batch.load("panel.png"),
         handImage = batch.load("clock-hand.png"),
         fixedHandImage = batch.load("clock-hand-fixed.png"),
         crankImage = batch.load("crank-left.png"),
@@ -637,6 +638,7 @@ var WORLD = (function () {
                 }
                 context.drawImage(tile2x2, 0, 0, sourceX, sourceY, x, y, tileWidth, tileHeight);
             }
+            context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
         }
         
         for (var t = 0; t < this.triggers.length; ++t) {
