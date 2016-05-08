@@ -1,0 +1,139 @@
+{
+    "width": 5,
+    "height": 5,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 3,
+    "moveLimit": 5,
+    "triggers": [
+        {
+            "i": 3,
+            "j": 2,
+            "action": "Clockwise",
+            "tint": 1
+        },
+        {
+            "i": 0,
+            "j": 4,
+            "action": "Clockwise",
+            "tint": 2
+        },
+        {
+            "i": 4,
+            "j": 2,
+            "action": "Mousetrap",
+            "tint": 3
+        },
+        {
+            "i": 1,
+            "j": 1,
+            "action": "Clockwise",
+            "tint": 4
+        },
+        {
+            "i": 4,
+            "j": 1,
+            "action": "Exit",
+            "tint": 5
+        },
+        {
+            "i": 4,
+            "j": 3,
+            "action": "Alarm",
+            "tint": 0
+        },
+        {
+            "i": 1,
+            "j": 3,
+            "action": "Clockwise",
+            "tint": 3
+        },
+        {
+            "i": 1,
+            "j": 4,
+            "action": "Clockwise",
+            "tint": 5
+        }
+    ],
+    "hands": [
+        {
+            "i": 1,
+            "j": 4,
+            "angle": 2,
+            "persist": false,
+            "trigger": 0
+        },
+        {
+            "i": 3,
+            "j": 2,
+            "angle": 2,
+            "persist": false,
+            "trigger": 3
+        },
+        {
+            "i": 3,
+            "j": 3,
+            "angle": 3,
+            "persist": false,
+            "trigger": 6
+        },
+        {
+            "i": 4,
+            "j": 1,
+            "angle": 1,
+            "persist": false,
+            "trigger": 1
+        },
+        {
+            "i": 4,
+            "j": 0,
+            "angle": 1,
+            "persist": false
+        },
+        {
+            "i": 5,
+            "j": 5,
+            "angle": 2,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 5,
+            "angle": 3,
+            "persist": false
+        },
+        {
+            "i": -6,
+            "j": 5,
+            "angle": 1,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 1,
+            "angle": 0,
+            "persist": false,
+            "trigger": 3
+        },
+        {
+            "i": 0,
+            "j": 1,
+            "angle": 3,
+            "persist": false,
+            "trigger": 3
+        },
+        {
+            "i": 3,
+            "j": 1,
+            "angle": 0,
+            "persist": false,
+            "trigger": 7
+        },
+        {
+            "i": 1,
+            "j": 2,
+            "angle": 1,
+            "persist": false
+        }
+    ]
+}
