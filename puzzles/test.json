@@ -6,23 +6,27 @@
     "triggers": [
         {
             "i": 6,
-            "j": 6  ,
-            "action": "Exit"
+            "j": 6,
+            "action": "Exit",
+            "tint": 0
         },
         {
             "i": 3,
             "j": 1,
-            "action": "Clockwise"
+            "action": "Clockwise",
+            "tint": 0
         },
         {
             "i": 2,
             "j": 3,
-            "action": "Clockwise"
+            "action": "Counterclock",
+            "tint": 2
         },
         {
             "i": 0,
             "j": 5,
-            "action": "Clockwise"
+            "action": "Clockwise",
+            "tint": 1
         }
     ],
     "hands": [
@@ -41,13 +45,44 @@
         {
             "i": 4,
             "j": 6,
-            "angle": 2,
+            "angle": 1,
             "trigger": 3
         },
         {
             "i": 5,
             "j": 7,
             "angle": 3
+        },
+        {
+            "i": 5,
+            "j": 2,
+            "angle": 1
+        },
+        {
+            "i": 5,
+            "j": 3,
+            "angle": 0,
+            "trigger": 2
+        },
+        {
+            "i": 5,
+            "j": 4,
+            "angle": 0
+        },
+        {
+            "i": 6,
+            "j": 4,
+            "angle": 1
+        },
+        {
+            "i": 5,
+            "j": 6,
+            "angle": 0
+        },
+        {
+            "i": 6,
+            "j": 5,
+            "angle": 2
         }
     ]
 }

@@ -386,6 +386,7 @@ var WORLD = (function () {
                 edit.hand.angle = angle + Math.PI;
             } else {
                 edit.hand.angle = canonicalAngle(edit.hand.angle);
+                edit.hand.startAngle = edit.hand.angle;
                 edit.lastHand = edit.hand;
                 edit.hand = null;
             }
