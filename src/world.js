@@ -22,7 +22,8 @@ var WORLD = (function () {
             Clockwise: 1,
             Counterclock: 2,
             Mousetrap: 3,
-            COUNT: 4
+            Alarm: 4,
+            COUNT: 5
         },
         QTURN = Math.PI / 2,
         TICK_TIME = 64,
@@ -45,7 +46,9 @@ var WORLD = (function () {
         crankImageTint = batch.load("crank-left-2.png"),
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
-        //exitBlockFlip = new BLIT.Flip(batch, "skull.png", 10, 2),
+        exitBlockFlip = new BLIT.Flip(batch, "skull_", 33, 2),
+        alarmFlip = new BLIT.Flip(batch, "alarm-shake_", 60, 2),
+        alarmImage = batch.load("alarm.png"),
         goat = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01.wav"),
@@ -96,49 +99,56 @@ var WORLD = (function () {
         this.j = j;
         this.action = action;
         this.tint = fixTint(tint);
+        this.triggered = false;
+        this.triggerAnim = null;
     }
+    
+    Trigger.prototype.rewind = function () {
+        this.triggered = false;
+        this.triggerAnim = null;
+    };
     
     Trigger.prototype.contains = function (entity) {
         return entity.i == this.i && entity.j == this.j;
     };
     
-    Trigger.prototype.style = function () {
-        switch (this.action) {
-            case TRIGGER_ACTIONS.Exit:
-                return "rgba(0,255,0,0.5)";
-            case TRIGGER_ACTIONS.Clockwise:
-                return "rgba(0,0,255,0.5)";
-            case TRIGGER_ACTIONS.Counterclock:
-                return "rgba(255,0,255,0.5)";
-            case TRIGGER_ACTIONS.Mousetrap:
-                return "rgba(255,0,0,0.5)";
+    Trigger.prototype.update = function (world, elapsed, now) {
+        if (this.triggerAnim && this.triggered) {
+            this.triggerAnim.update(elapsed);
         }
-        return "black";
     };
     
     Trigger.prototype.draw = function (context, world, scale) {
         var x = (this.i + 0.5) * world.tileWidth,
             y = (this.j + 0.5) * world.tileHeight;
-        if (this.action == TRIGGER_ACTIONS.Clockwise || this.action == TRIGGER_ACTIONS.Counterclock) {
-            var mirror = this.action == TRIGGER_ACTIONS.Counterclock,
+        if (this.action === TRIGGER_ACTIONS.Clockwise || this.action === TRIGGER_ACTIONS.Counterclock) {
+            var mirror = this.action === TRIGGER_ACTIONS.Counterclock,
                 width = crankImage.width * scale,
                 height = crankImage.height * scale;
             BLIT.draw(context, crankImage, x, y, BLIT.ALIGN.Center, width, height, mirror);
             BLIT.draw(context, crankImageTint, x, y, BLIT.ALIGN.Center, width, height, mirror, TINTS[this.tint]);
             return;
         }
-        if (this.action == TRIGGER_ACTIONS.Mousetrap) {
+        if (this.action === TRIGGER_ACTIONS.Mousetrap) {
             BLIT.draw(context, trapImage, x, y, BLIT.ALIGN.Center, trapImage.width * scale, trapImage.height * scale);
             BLIT.draw(context, trapCheese, x, y, BLIT.ALIGN.Center, trapCheese.width * scale, trapCheese.height * scale);
             return;
         }
-        if (this.action == TRIGGER_ACTIONS.Exit) {
-            BLIT.draw(context, trapImage, x, y, BLIT.ALIGN.Center, trapImage.width * scale, trapImage.height * scale);
+        if (this.action === TRIGGER_ACTIONS.Exit) {
+            if (!this.triggerAnim) {
+                this.triggerAnim = exitBlockFlip.setupPlayback(32, false);
+            }
         }
-        context.save();
-        context.fillStyle = this.style();
-        context.fillRect(this.i * world.tileWidth, this.j * world.tileHeight, world.tileWidth, world.tileHeight);
-        context.restore();
+        if (this.action === TRIGGER_ACTIONS.Alarm) {
+            if (!this.triggerAnim) {
+                this.triggerAnim = alarmFlip.setupPlayback(32, false);
+            }
+        }
+        this.triggerAnim.draw(context, x, y, BLIT.ALIGN.Center, this.triggerAnim.width() * scale, this.triggerAnim.height() * scale);
+    };
+    
+    Trigger.prototype.blocks = function () {
+        return this.action == TRIGGER_ACTIONS.Exit && !this.triggered;
     };
     
     Trigger.prototype.save = function () {
@@ -392,7 +402,6 @@ var WORLD = (function () {
         var lastAction = this.actions[this.actions.length - 1];
         if (this.timer === null) {
             this.timer = lastAction.time;
-            console.log("Timer: " + this.timer);
         } else {
             this.timer -= elapsed;
         }
@@ -402,7 +411,6 @@ var WORLD = (function () {
             this.actions.pop();
             if (this.actions.length > 0) {
                 this.timer = this.actions[this.actions.length - 1].time;
-                console.log("Timer: " + this.timer);
             } else {
                 this.timer = REWIND_PAUSE;
             }
@@ -443,6 +451,10 @@ var WORLD = (function () {
     World.prototype.reset = function() {
         this.replayers = [];
         this.setupPlayer();
+        
+        for (var t = 0; t < this.triggers.length; ++t) {
+            this.triggers[t].rewind();
+        }
         
         for (var h = 0; h < this.hands.length; ++h) {
             var hand = this.hands[h];
@@ -516,6 +528,10 @@ var WORLD = (function () {
         var sweeping = false;
         for (var h = 0; h < this.hands.length; ++h) {
             sweeping |= this.hands[h].update(now, elapsed);
+        }
+        
+        for (var t = 0; t < this.triggers.length; ++t) {
+            this.triggers[t].update(this, elapsed, now);
         }
 
         for (var r = 0; r < this.replayers.length; ++r) {
@@ -728,6 +744,7 @@ var WORLD = (function () {
                 edit.lastHand.persist = !edit.lastHand.persist;
             } else if (edit.lastTrigger !== null) {
                 edit.lastTrigger.action = (edit.lastTrigger.action + 1) % TRIGGER_ACTIONS.COUNT;
+                edit.lastTrigger.triggerAnim = null;
             }
         } else if (keyboard.wasAsciiPressed("C")) {
             var colorTrigger = edit.lastTrigger;
@@ -864,6 +881,13 @@ var WORLD = (function () {
             }
         }
         
+        for (var t = 0; t < this.triggers.length; ++t) {
+            var trigger = this.triggers[t];
+            if (trigger.i == newI && trigger.j == newJ && trigger.blocks()) {
+                return false;
+            }
+        }
+        
         return true;
     };
     
@@ -891,6 +915,17 @@ var WORLD = (function () {
                 if (hand.trigger == trigger) {
                     var push = hand.turn();
                     this.sweep(push);
+                }
+            }
+        } else if(trigger.action == TRIGGER_ACTIONS.Mousetrap) {
+            this.squish(agent);
+            this.rewinder.add(new Unsquish([agent]));
+        } else if(trigger.action == TRIGGER_ACTIONS.Alarm) {
+            trigger.triggered = true;
+            for (var t = 0; t < this.triggers.length; ++t) {
+                var other = this.triggers[t];
+                if (other.action == TRIGGER_ACTIONS.Exit) {
+                    other.triggered = true;
                 }
             }
         }
@@ -946,6 +981,9 @@ var WORLD = (function () {
     World.prototype.rewound = function () {
         for (var r = 0; r < this.replayers.length; ++r) {
             this.replayers[r].rewind();
+        }
+        for (var t = 0; t < this.triggers.length; ++t) {
+            this.triggers[t].rewind();
         }
         for (var h = 0; h < this.hands.length; ++h) {
             this.hands[h].rewind();
