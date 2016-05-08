@@ -53,7 +53,8 @@ var WORLD = (function () {
         exitBlockFlip = new BLIT.Flip(batch, "skull_", RING_FRAMES, 2),
         alarmFlip = new BLIT.Flip(batch, "alarm-shake_", RING_FRAMES, 2),
         alarmImage = batch.load("alarm.png"),
-        goat = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
+        goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
+        goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(32, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01.wav"),
         tickSound = new BLORT.Noise("sounds/clockturn01.wav"),
@@ -540,7 +541,7 @@ var WORLD = (function () {
         AGENT.updateAnims(elapsed);
         
         if (this.rewinding) {
-            BLIT.updatePlaybacks(elapsed, [goat]);
+            BLIT.updatePlaybacks(elapsed, [goatExcited, goatStoic]);
             if (!this.rewinder.update(this, now, elapsed)) {
                 this.rewound();
             }
@@ -891,6 +892,7 @@ var WORLD = (function () {
         BLIT.centeredText(context, moveText, this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
         BLIT.centeredText(context, replayText, 2 * this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
         
+        var goat = this.rewinding ? goatExcited : goatStoic;
         goat.draw(context, -this.tileHeight * 0.5, this.totalHeight() + this.tileHeight * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale);
         
         context.restore();
