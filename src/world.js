@@ -33,6 +33,8 @@ var WORLD = (function () {
         fixedHandImage = batch.load("clock-hand-fixed.png"),
         crankImage = batch.load("crank-left.png"),
         crankImageTint = batch.load("crank-left-2.png"),
+        trapImage = batch.load("trap.png"),
+        trapCheese = batch.load("trap-cheese.png"),
         nextTint = 0;
         
     (function () {
@@ -91,14 +93,19 @@ var WORLD = (function () {
     };
     
     Trigger.prototype.draw = function (context, scale) {
+        var x = (this.i + 0.5) * TILE_WIDTH,
+            y = (this.j + 0.5) * TILE_WIDTH;
         if (this.action == TRIGGER_ACTIONS.Clockwise || this.action == TRIGGER_ACTIONS.Counterclock) {
             var mirror = this.action == TRIGGER_ACTIONS.Counterclock,
-                x = (this.i + 0.5) * TILE_WIDTH,
-                y = (this.j + 0.5) * TILE_WIDTH,
                 width = crankImage.width * scale,
                 height = crankImage.height * scale;
             BLIT.draw(context, crankImage, x, y, BLIT.ALIGN.Center, width, height, mirror);
             BLIT.draw(context, crankImageTint, x, y, BLIT.ALIGN.Center, width, height, mirror, TINTS[this.tint]);
+            return;
+        }
+        if (this.action == TRIGGER_ACTIONS.Mousetrap) {
+            BLIT.draw(context, trapImage, x, y, BLIT.ALIGN.Center, trapImage.width * scale, trapImage.height * scale);
+            BLIT.draw(context, trapCheese, x, y, BLIT.ALIGN.Center, trapCheese.width * scale, trapCheese.height * scale);
             return;
         }
         context.save();
