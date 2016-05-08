@@ -1,0 +1,10 @@
+{
+    "width": 6,
+    "height": 4,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 4,
+    "moveLimit": 5,
+    "triggers": [],
+    "hands": []
+}
