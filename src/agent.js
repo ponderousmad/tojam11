@@ -1,10 +1,10 @@
 var AGENT = (function () {
     "use strict";
     
-    var PLAYER_FRAME_TIME = 64,
+    var PLAYER_FRAME_TIME = 32,
         batch = new BLIT.Batch("images/"),
-        playerAnim = new BLIT.Flip(batch, "mouse-A-idle-", 1, 2).setupPlayback(64, true),
-        replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(64, true);
+        playerAnim = new BLIT.Flip(batch, "mouse-A-idle-2_", 20, 2).setupPlayback(PLAYER_FRAME_TIME, true),
+        replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true);
 
     (function () {
         batch.commit();
