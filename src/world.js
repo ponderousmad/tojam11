@@ -30,6 +30,8 @@ var WORLD = (function () {
         UNMOVE_TIME = 64,
         REWIND_PAUSE = 250,
         HAND_PIVOT = 48,
+        MUSIC_REWIND_FADE_OUT = 500,
+        MUSIC_REWIND_FADE_IN = 500,
         batch = new BLIT.Batch("images/"),
         background = batch.load("bg.png"),
         tile2x2 = batch.load("floor-tile.png"),
@@ -41,11 +43,22 @@ var WORLD = (function () {
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
         goat = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
+        rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
+        crankSound = new BLORT.Noise("sounds/crank01.wav"),
+        tickSound = new BLORT.Noise("sounds/clockturn01.wav"),
+        musicTracks = [],
+        music = null,
         nextTint = 0,
         editArea = null;
         
     (function () {
         batch.commit();
+        var TRACKS = 2;
+        for (var track = 1; track <= TRACKS; ++track) {
+            var tune = new BLORT.Tune("sounds/MusicLoop0" + track + ".wav");
+            tune.setVolume(0.0);
+            musicTracks.push(tune);
+        }
     }());
     
     function actionName(action) {
@@ -409,6 +422,7 @@ var WORLD = (function () {
         this.rewinding = false;
         this.gameOver = false;
         this.setupPlayer();
+        this.musicTimer = null;
     }
     
     World.prototype.reset = function() {
@@ -427,6 +441,14 @@ var WORLD = (function () {
         this.gameOver = false;
     };
     
+    World.prototype.fadeMusic = function () {
+        this.musicTimer = MUSIC_REWIND_FADE_OUT;
+    };
+    
+    World.prototype.resumeMusic = function () {
+        this.musicTimer = MUSIC_REWIND_FADE_OUT;
+    };
+    
     World.prototype.setupPlayer = function () {
         this.player = new AGENT.Player(this.startJ, this.startI);
     };
@@ -442,6 +464,24 @@ var WORLD = (function () {
     World.prototype.update = function (now, elapsed, keyboard, pointer) {
         if (this.loading) {
             return false;
+        }
+        
+        if (music === null) {
+            if (musicTracks[0].isLoaded()) {
+                music = musicTracks[0];
+                music.play();
+            }
+        } else {
+            if (this.musicTimer !== null) {
+                this.musicTimer = Math.max(0, this.musicTimer - elapsed);
+            }
+            var volume = 0.2;
+            if (this.rewinding) {
+                volume = Math.max(0.05, volume * (this.musicTimer / MUSIC_REWIND_FADE_OUT));
+            } else {
+                volume = Math.max(0.05, volume * (1 - (this.musicTimer / MUSIC_REWIND_FADE_IN)));
+            }
+            music.setVolume(volume);
         }
 
         if (this.editUpdate(now, elapsed, keyboard, pointer)) {
@@ -485,6 +525,8 @@ var WORLD = (function () {
         if (this.player.moves.length >= this.moveLimit && !this.updating()) {
             if (this.replayers.length < this.replayLimit) {
                 this.rewinding = true;
+                this.fadeMusic();
+                rewindSound.play();
             } else {
                 this.gameOver = true;
             }
@@ -823,6 +865,8 @@ var WORLD = (function () {
     
     World.prototype.activateTrigger = function (trigger, agent) {
         if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
+            crankSound.play();
+            tickSound.play();
             for (var h = 0; h < this.hands.length; ++h) {
                 var hand = this.hands[h];
                 if (hand.trigger == trigger) {
@@ -880,6 +924,7 @@ var WORLD = (function () {
         this.rewinding = false;
 
         this.startRestep();
+        this.resumeMusic();
     };
     
     World.prototype.save = function () {

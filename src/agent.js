@@ -11,10 +11,17 @@ var AGENT = (function () {
         replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-", 1, 2).setupPlayback(REWIND_FRAME_TIME, true),
         loopAnims = [
             playerAnim, playerRewind, replayerAnim, replayerRewind
-        ];
+        ],
+        stepSounds = [],
+        stepSoundIndex = 0;
     
 
     (function () {
+        var STEP_SOUNDS = 3;
+        for (var step = 1; step <= STEP_SOUNDS; ++step) {
+            var noise = new BLORT.Noise("sounds/steps0" + step + ".wav");
+            stepSounds.push(noise);
+        }
         batch.commit();
     }());
     
@@ -127,6 +134,9 @@ var AGENT = (function () {
             this.facing = iStep < 0 ? BLIT.MIRROR.Horizontal : BLIT.MIRROR.None;
         }
         this.walk = playerWalkFlip.setupPlayback(PLAYER_FRAME_TIME, false);
+        
+        stepSounds[stepSoundIndex].play();
+        stepSoundIndex = (stepSoundIndex + 1) % stepSounds.length;
     };
     
     Player.prototype.sweep = function(push) {
@@ -218,6 +228,8 @@ var AGENT = (function () {
         this.i = this.startI;
         this.j = this.startJ;
         this.rewinding = false;
+        this.push = null;
+        this.facing = BLIT.MIRROR.None;
     };
     
     Replayer.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
