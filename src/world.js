@@ -70,7 +70,7 @@ var WORLD = (function () {
         batch.commit();
         var TRACKS = 2, DEATHS = 2;
         for (var track = 1; track <= TRACKS; ++track) {
-            if (entropy.select(0.5)) {
+            if (track == 1 && entropy.select(0.5)) {
                 continue;
             }
             var tune = new BLORT.Tune("sounds/MusicLoop0" + track + ".wav");
@@ -991,6 +991,8 @@ var WORLD = (function () {
             }
             alarmSound.play();
             this.rewinder.add(new Unring(trigger, exits));
+        } else if(trigger.action == TRIGGER_ACTIONS.Exit) {
+            this.player.win();
         }
     };
     
@@ -1034,6 +1036,10 @@ var WORLD = (function () {
         if (playerControlled) {
             this.tryRewind();
         }
+    };
+    
+    World.prototype.onWin = function () {
+        
     };
     
     World.prototype.startRestep = function () {

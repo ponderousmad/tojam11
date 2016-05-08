@@ -9,6 +9,7 @@ var AGENT = (function () {
         playerRewind = new BLIT.Flip(batch, "mouse-A-rewind_", 10, 2).setupPlayback(REWIND_FRAME_TIME, true),
         playerWalkFlip = new BLIT.Flip(batch, "mouse-A-walk-00_", 10, 2),
         playerDeathFlip = new BLIT.Flip(batch, "mouse-A-dead_", DEATH_FRAMES, 2),
+        playerWinFlip = new BLIT.Flip(batch, "mouse-hole_", 14, 2),
         replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true),
         replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-00_", 10, 2).setupPlayback(REWIND_FRAME_TIME, true),
         splatImage = batch.load("splat.png"),
@@ -82,6 +83,7 @@ var AGENT = (function () {
         this.walk = null;
         this.rewinding = false;
         this.deathAnim = null;
+        this.winAnim = null;
     }
     
     Player.prototype.update = function (world, waiting, sweeping, now, elapsed, keyboard, pointer) {
@@ -97,6 +99,13 @@ var AGENT = (function () {
         if (this.deathAnim !== null) {
             if (this.deathAnim.update(elapsed)) {
                 world.onDeath(true);
+            }
+            return;
+        }
+        
+        if (this.winAnim !== null) {
+            if (this.winAnim.update(elapsed)) {
+                world.onWin();
             }
             return;
         }
@@ -133,7 +142,17 @@ var AGENT = (function () {
         this.deathAnim = playerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
     
+    Player.prototype.win = function () {
+        this.winAnim = playerWinFlip.setupPlayback(PLAYER_FRAME_TIME, false);
+    };
+    
     Player.prototype.updating = function () {
+        if (this.deathAnim !== null) {
+            return true;
+        }
+        else if(this.winAnim !== null) {
+            return true;
+        }
         if (this.moveTimer !== null) {
             return true;
         }
@@ -175,6 +194,8 @@ var AGENT = (function () {
         
         if (this.deathAnim !== null) {
             anim = this.deathAnim;
+        } else if (this.winAnim !== null) {
+            anim = this.winAnim;
         } else if (this.rewinding) {
             anim = playerRewind;
         } else {
