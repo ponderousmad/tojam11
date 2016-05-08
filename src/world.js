@@ -28,6 +28,7 @@ var WORLD = (function () {
         TICK_TIME = 64,
         UNTICK_TIME = 32,
         UNMOVE_TIME = 64,
+        UNSQUISH_TIME = 500,
         REWIND_PAUSE = 250,
         HAND_PIVOT = 48,
         MUSIC_REWIND_FADE_OUT = 500,
@@ -44,6 +45,7 @@ var WORLD = (function () {
         crankImageTint = batch.load("crank-left-2.png"),
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
+        //exitBlockFlip = new BLIT.Flip(batch, "skull.png", 10, 2),
         goat = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01.wav"),
@@ -129,6 +131,9 @@ var WORLD = (function () {
             BLIT.draw(context, trapImage, x, y, BLIT.ALIGN.Center, trapImage.width * scale, trapImage.height * scale);
             BLIT.draw(context, trapCheese, x, y, BLIT.ALIGN.Center, trapCheese.width * scale, trapCheese.height * scale);
             return;
+        }
+        if (this.action == TRIGGER_ACTIONS.Exit) {
+            BLIT.draw(context, trapImage, x, y, BLIT.ALIGN.Center, trapImage.width * scale, trapImage.height * scale);
         }
         context.save();
         context.fillStyle = this.style();
@@ -355,14 +360,20 @@ var WORLD = (function () {
         );
     };
     
-    function Unsquish(player) {
-        this.player = player;
-        this.i = player.i;
-        this.j = player.j;
+    function Unsquish(players) {
+        this.squishes = [];
+        for (var p = 0; p < players.length; ++p) {
+            var player = players[p];
+            this.squishes.push({ player: player, i: player.i, j: player.j});
+        }
+        this.time = UNSQUISH_TIME;
     }
     
     Unsquish.prototype.update = function (world, fraction) {
-        this.player.drawAt(this.i, this.j, 0, fraction);
+        for (var s = 0; s < this.squishes.length; ++s) {
+            var squish = this.squishes[s];
+            squish.player.rewindTo(squish.i, squish.j, 0, 1 - fraction);
+        }
     };
     
     function Rewinder() {
@@ -381,6 +392,7 @@ var WORLD = (function () {
         var lastAction = this.actions[this.actions.length - 1];
         if (this.timer === null) {
             this.timer = lastAction.time;
+            console.log("Timer: " + this.timer);
         } else {
             this.timer -= elapsed;
         }
@@ -390,6 +402,7 @@ var WORLD = (function () {
             this.actions.pop();
             if (this.actions.length > 0) {
                 this.timer = this.actions[this.actions.length - 1].time;
+                console.log("Timer: " + this.timer);
             } else {
                 this.timer = REWIND_PAUSE;
             }
@@ -525,15 +538,19 @@ var WORLD = (function () {
         }
         this.player.update(this, this.stepTimer !== null || this.gameOver, sweeping, now, elapsed, keyboard, pointer);
         if (this.player.moves.length >= this.moveLimit && !this.updating()) {
-            if (this.replayers.length < this.replayLimit) {
-                this.rewinding = true;
-                this.fadeMusic();
-                rewindSound.play();
-            } else {
-                this.gameOver = true;
-            }
+            this.tryRewind();
         }
         return true;
+    };
+    
+    World.prototype.tryRewind = function () {
+        if (this.replayers.length < this.replayLimit) {
+            this.rewinding = true;
+            this.fadeMusic();
+            rewindSound.play();
+        } else {
+            this.gameOver = true;
+        }
     };
     
     World.prototype.updating = function () {
@@ -854,14 +871,14 @@ var WORLD = (function () {
         if (playerControlled) {
             this.startRestep();
         }
+        if (move !== null) {
+            this.rewinder.add(new Unmove(agent, move, relocated));
+        }
         for (var t = 0; t < this.triggers.length; ++t) {
             var trigger = this.triggers[t];
             if (relocated && trigger.contains(agent)) {
                 this.activateTrigger(trigger, agent);
             }
-        }
-        if (move !== null) {
-            this.rewinder.add(new Unmove(agent, move, relocated));
         }
     };
     
@@ -880,14 +897,15 @@ var WORLD = (function () {
     };
     
     World.prototype.sweep = function (push) {
-        var sweeps = [];
+        var sweeps = [],
+            squishes = [];
         if (this.player.isAt(push.i, push.j)) {
             if (this.canMove(this.player, push.newI, push.newJ, push.hand)) {
                 this.player.sweep(push);
                 sweeps.push(new Unmove(this.player, push.move, true));
             } else {
                 this.squish(this.player);
-                sweeps.push(new Unsquish(this.player));
+                squishes.push(this.player);
             }
         }
         
@@ -899,11 +917,24 @@ var WORLD = (function () {
                     sweeps.push(new Unmove(replayer, push.move, true));
                 } else {
                     this.squish(replayer);
-                    sweeps.push(new Unsquish(replayer));
+                    squishes.push(replayer);
                 }
             }
         }
         this.rewinder.add(new Untick(push.hand, push.direction, sweeps));
+        if (squishes.length > 0) {
+            this.rewinder.add(new Unsquish(squishes));
+        }
+    };
+    
+    World.prototype.squish = function (player) {
+        player.squish();
+    };
+    
+    World.prototype.onDeath = function (playerControlled) {
+        if (playerControlled) {
+            this.tryRewind();
+        }
     };
     
     World.prototype.startRestep = function () {

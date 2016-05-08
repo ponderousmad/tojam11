@@ -3,12 +3,15 @@ var AGENT = (function () {
     
     var PLAYER_FRAME_TIME = 32,
         REWIND_FRAME_TIME = 10,
+        DEATH_FRAMES = 15,
         batch = new BLIT.Batch("images/"),
         playerAnim = new BLIT.Flip(batch, "mouse-A-idle-2_", 20, 2).setupPlayback(PLAYER_FRAME_TIME, true),
         playerRewind = new BLIT.Flip(batch, "mouse-A-rewind-", 1, 2).setupPlayback(REWIND_FRAME_TIME, true),
         playerWalkFlip = new BLIT.Flip(batch, "mouse-A-walk-00_", 10, 2),
+        playerDeathFlip = new BLIT.Flip(batch, "mouse-A-dead_", DEATH_FRAMES, 2),
         replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true),
         replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-", 1, 2).setupPlayback(REWIND_FRAME_TIME, true),
+        splatImage = batch.load("splat.png"),
         loopAnims = [
             playerAnim, playerRewind, replayerAnim, replayerRewind
         ],
@@ -34,7 +37,7 @@ var AGENT = (function () {
         player.j += move.j;
     }
     
-    function doRewind(player, i, j, iDir, unsquishFraction) {
+    function doRewind(player, i, j, iDir, unsquishFraction, deathFlip) {
         player.rewinding = true;
         player.i = i;
         player.j = j;
@@ -42,6 +45,9 @@ var AGENT = (function () {
             player.facing = iDir > 0;
         }
         if (unsquishFraction !== null) {
+            player.deathAnim = deathFlip.setupPlayback(PLAYER_FRAME_TIME, false, PLAYER_FRAME_TIME * DEATH_FRAMES * unsquishFraction);
+        } else {
+            player.deathAnim = null;
         }
     }
     
@@ -61,8 +67,6 @@ var AGENT = (function () {
         if (!batch.loaded) {
             return;
         }
-        x += world.tileWidth * 0.5;
-        y += world.tileHeight * 0.5;
         var width = anim.width(),
             height = anim.height();
         anim.draw(context, x, y, BLIT.ALIGN.Center, width * scale, height * scale, facing);
@@ -77,6 +81,7 @@ var AGENT = (function () {
         this.facing = BLIT.MIRROR.None;
         this.walk = null;
         this.rewinding = false;
+        this.deathAnim = null;
     }
     
     Player.prototype.update = function (world, waiting, sweeping, now, elapsed, keyboard, pointer) {
@@ -89,6 +94,13 @@ var AGENT = (function () {
             updatePush(world, this);
             return;
         }
+        if (this.deathAnim !== null) {
+            if (this.deathAnim.update(elapsed)) {
+                world.onDeath(true);
+            }
+            return;
+        }
+        
         if (this.moveTimer) {
             this.moveTimer -= elapsed;
             if (this.moveTimer < 0) {
@@ -115,6 +127,10 @@ var AGENT = (function () {
         else if (keyboard.wasKeyPressed(IO.KEYS.Right)) {
             this.tryMove(world, 1, 0);
         }
+    };
+    
+    Player.prototype.squish = function () {
+        this.deathAnim = playerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
     
     Player.prototype.updating = function () {
@@ -148,17 +164,19 @@ var AGENT = (function () {
     };
     
     Player.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
-        doRewind(this, i, j, iDir, unsquishFraction);
+        doRewind(this, i, j, iDir, unsquishFraction, playerDeathFlip);
     };
     
     Player.prototype.draw = function (context, world, imageScale) {
-        var x = this.i * world.tileWidth,
-            y = this.j * world.tileHeight,
+        var x = (this.i + 0.5) * world.tileWidth,
+            y = (this.j + 0.5) * world.tileHeight,
             anim = null,
             move = null,
             moveFraction = 0;
         
-        if (this.rewinding) {
+        if (this.deathAnim !== null) {
+            anim = this.deathAnim;
+        } else if (this.rewinding) {
             anim = playerRewind;
         } else {
             anim = this.walk !== null ? this.walk : playerAnim;
@@ -192,7 +210,12 @@ var AGENT = (function () {
         this.push = null;
         this.facing = BLIT.MIRROR.None;
         this.rewinding = false;
+        this.deathAnim = null;
     }
+    
+    Replayer.prototype.squish = function () {
+        this.deathAnim = playerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
+    };
     
     Replayer.prototype.step = function (world) {
         if (this.moveIndex >= this.moves.length) {
@@ -213,6 +236,9 @@ var AGENT = (function () {
     };
     
     Replayer.prototype.update = function (world, now, elapsed) {
+        if (this.deathAnim !== null) {
+            this.deathAnim.update(elapsed);
+        }
         updatePush(world, this);
     };
     
@@ -230,10 +256,11 @@ var AGENT = (function () {
         this.rewinding = false;
         this.push = null;
         this.facing = BLIT.MIRROR.None;
+        this.deathAnim = null;
     };
     
     Replayer.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
-        doRewind(this, i, j, iDir, unsquishFraction);
+        doRewind(this, i, j, iDir, unsquishFraction, playerDeathFlip);
     };
 
     Replayer.prototype.isAt = function (i, j) {
@@ -245,12 +272,24 @@ var AGENT = (function () {
     };
     
     Replayer.prototype.draw = function (context, world, imageScale, moveFraction) {
-        var x = this.i * world.tileWidth,
-            y = this.j * world.tileHeight,
+        var x = (this.i + 0.5) * world.tileWidth,
+            y = (this.j + 0.5) * world.tileHeight,
             move = null,
             anim = replayerAnim;
-        
-        if (this.rewinding) {
+        if (this.deathAnim) {
+            anim = this.deathAnim;
+            context.save();
+            var splatFactor = this.deathAnim.fractionComplete;
+            console.log("Splat: " + splatFactor);
+            context.globalAlpha = splatFactor;
+            splatFactor *= imageScale;
+            BLIT.draw(context, splatImage, x, y, BLIT.ALIGN.Center, splatImage.width * splatFactor, splatImage.height * splatFactor);
+            context.restore();
+            if (this.deathAnim.fractionComplete >= 1.0) {
+                return;
+            }
+        }
+        else if (this.rewinding) {
             anim = replayerRewind;
         } else {
             if (this.push !== null) {

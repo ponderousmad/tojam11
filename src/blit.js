@@ -205,7 +205,7 @@ var BLIT = (function () {
             playback.elapsed = playback.elapsed % totalLength;
         }
         if (playback.elapsed > totalLength) {
-            playback.fractionComplete = 0;
+            playback.fractionComplete = 1;
             return true;
         } else {
             playback.fractionComplete = playback.elapsed / totalLength;
