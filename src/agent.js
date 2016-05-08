@@ -6,11 +6,11 @@ var AGENT = (function () {
         DEATH_FRAMES = 15,
         batch = new BLIT.Batch("images/"),
         playerAnim = new BLIT.Flip(batch, "mouse-A-idle-2_", 20, 2).setupPlayback(PLAYER_FRAME_TIME, true),
-        playerRewind = new BLIT.Flip(batch, "mouse-A-rewind-", 1, 2).setupPlayback(REWIND_FRAME_TIME, true),
+        playerRewind = new BLIT.Flip(batch, "mouse-A-rewind_", 10, 2).setupPlayback(REWIND_FRAME_TIME, true),
         playerWalkFlip = new BLIT.Flip(batch, "mouse-A-walk-00_", 10, 2),
         playerDeathFlip = new BLIT.Flip(batch, "mouse-A-dead_", DEATH_FRAMES, 2),
         replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true),
-        replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-", 1, 2).setupPlayback(REWIND_FRAME_TIME, true),
+        replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-00_", 10, 2).setupPlayback(REWIND_FRAME_TIME, true),
         splatImage = batch.load("splat.png"),
         loopAnims = [
             playerAnim, playerRewind, replayerAnim, replayerRewind
