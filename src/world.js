@@ -94,9 +94,9 @@ var WORLD = (function () {
         return "black";
     };
     
-    Trigger.prototype.draw = function (context, scale) {
-        var x = (this.i + 0.5) * TILE_WIDTH,
-            y = (this.j + 0.5) * TILE_WIDTH;
+    Trigger.prototype.draw = function (context, world, scale) {
+        var x = (this.i + 0.5) * world.tileWidth,
+            y = (this.j + 0.5) * world.tileHeight;
         if (this.action == TRIGGER_ACTIONS.Clockwise || this.action == TRIGGER_ACTIONS.Counterclock) {
             var mirror = this.action == TRIGGER_ACTIONS.Counterclock,
                 width = crankImage.width * scale,
@@ -112,7 +112,7 @@ var WORLD = (function () {
         }
         context.save();
         context.fillStyle = this.style();
-        context.fillRect(this.i * TILE_WIDTH, this.j * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+        context.fillRect(this.i * world.tileWidth, this.j * world.tileHeight, world.tileWidth, world.tileHeight);
         context.restore();
     };
     
@@ -156,10 +156,10 @@ var WORLD = (function () {
         return this.tickTimer !== null;
     };
     
-    ClockHand.prototype.draw = function (context, editing, imageScale) {
+    ClockHand.prototype.draw = function (context, world, editing, imageScale) {
         context.save();
-        var x = this.i * TILE_WIDTH,
-            y = this.j * TILE_WIDTH,
+        var x = this.i * world.tileWidth,
+            y = this.j * world.tileHeight,
             angle = this.angle;
         if (this.tickTimer !== null) {
             angle -= QTURN * (this.tickTimer / TICK_TIME) * this.direction();
@@ -176,8 +176,8 @@ var WORLD = (function () {
         context.restore();
         
         if (editing && this.trigger) {
-            var endX = (this.trigger.i + 0.5) * TILE_WIDTH,
-                endY = (this.trigger.j + 0.5) * TILE_WIDTH;
+            var endX = (this.trigger.i + 0.5) * world.tileWidth,
+                endY = (this.trigger.j + 0.5) * world.tileHeight;
             
             context.save();
             context.strokeStyle = "rgba(0,0,0,.2)";
@@ -404,8 +404,8 @@ var WORLD = (function () {
         var point = pointer.location();
         
         if (point) {
-            var x = point.x / TILE_WIDTH,
-                y = point.y / TILE_HEIGHT;
+            var x = point.x / this.tileWidth,
+                y = point.y / this.tileHeight;
             
             return {
                 x: x, y: y,
@@ -604,21 +604,21 @@ var WORLD = (function () {
         }
         BLIT.draw(context, background, width * 0.5, height * 0.5, BLIT.ALIGN.Center, bgWidth, bgHeight);
         
-        var scale = 2 * TILE_WIDTH / tile2x2.width;
+        var scale = 2 * this.tileWidth / tile2x2.width;
         for (var i = 0; i < this.width; i += 2) {
-            var tileWidth = TILE_WIDTH,
+            var tileWidth = this.tileWidth,
                 sourceX = tile2x2.width * 0.5,
-                x = i * TILE_WIDTH;
+                x = i * this.tileWidth;
             if ((this.width - i) != 1) {
-                tileWidth = 2 * TILE_WIDTH;
+                tileWidth = 2 * this.tileWidth;
                 sourceX = tile2x2.width;
             }
             for (var j = 0; j < this.height; j += 2) {
-                var tileHeight = TILE_HEIGHT,
+                var tileHeight = this.tileHeight,
                     sourceY = tile2x2.height * 0.5,
-                    y = j * TILE_HEIGHT;
+                    y = j * this.tileHeight;
                 if ((this.height - j) != 1) {
-                    tileHeight = 2 * TILE_HEIGHT;
+                    tileHeight = 2 * this.tileHeight;
                     sourceY = tile2x2.height;
                 }
                 context.drawImage(tile2x2, 0, 0, sourceX, sourceY, x, y, tileWidth, tileHeight);
@@ -626,11 +626,11 @@ var WORLD = (function () {
         }
         
         for (var t = 0; t < this.triggers.length; ++t) {
-            this.triggers[t].draw(context, scale);
+            this.triggers[t].draw(context, this, scale);
         }
         
         for (var h = 0; h < this.hands.length; ++h) {
-            this.hands[h].draw(context, this.editData !== null, scale);
+            this.hands[h].draw(context, this, this.editData !== null, scale);
         }
         
         for (var row = 0; row < this.height; ++row) {
