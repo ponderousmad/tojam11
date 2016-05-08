@@ -28,6 +28,7 @@ var WORLD = (function () {
         TICK_TIME = 50,
         HAND_PIVOT = 48,
         batch = new BLIT.Batch("images/"),
+        background = batch.load("bg.png"),
         tile2x2 = batch.load("floor-tile.png"),
         handImage = batch.load("clock-hand.png"),
         fixedHandImage = batch.load("clock-hand-fixed.png"),
@@ -593,6 +594,16 @@ var WORLD = (function () {
             BLIT.centeredText(context, "LOADING", width / 2, height / 2);
             return;
         }
+        
+        var bgWidth = width,
+            bgHeight = (width / background.width) * background.height;
+        if ((background.width / background.height) > (width / height)) {
+            bgHeight = height;
+            bgWidth = (height / background.height) * background.width;
+            
+        }
+        BLIT.draw(context, background, width * 0.5, height * 0.5, BLIT.ALIGN.Center, bgWidth, bgHeight);
+        
         var scale = 2 * TILE_WIDTH / tile2x2.width;
         for (var i = 0; i < this.width; i += 2) {
             var tileWidth = TILE_WIDTH,
