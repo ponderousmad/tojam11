@@ -35,7 +35,8 @@ var WORLD = (function () {
         crankImageTint = batch.load("crank-left-2.png"),
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
-        nextTint = 0;
+        nextTint = 0,
+        editArea = null;
         
     (function () {
         batch.commit();
@@ -427,15 +428,50 @@ var WORLD = (function () {
         };
     };
     
+    World.prototype.checkpoint = function () {
+        console.log(this.save());
+        try {
+            window.localStorage.setItem("puzzle", this.save());
+        } catch (error) {
+            console.log("Error storing puzzle: " + error);
+        }
+    };
+    
     World.prototype.editUpdate = function (now, elapsed, keyboard, pointer) {
+        if (editArea === null) {
+            editArea = document.getElementById("puzzle");
+            var self = this;
+            editArea.addEventListener("paste", function (event) {
+                setTimeout(function () { self.load(JSON.parse(editArea.value)); });
+            }, false);
+            
+            try {
+                editArea.value = window.localStorage.getItem("puzzle");
+            } catch (error) {
+                console.log("Error loading puzzle: " + error);
+            }
+        }
         if (keyboard.wasAsciiPressed("E")) {
             if (this.editData !== null) {
                 this.editData = null;
+                editArea.className = "hidden";
+                this.checkpoint();
             } else {
-                this.editData = {};
+                this.editData = {
+                    hand: null,
+                    trigger: null,
+                    lastHand: null,
+                    lastTrigger: null
+                };
+                editArea.className = "";
             }
         } else if (keyboard.wasAsciiPressed("S")) {
-            console.log(this.save());
+            editArea.value = this.save();
+            editArea.select();
+            editArea.focus();
+            document.execCommand("copy");
+            this.checkpoint();
+
         } else if (keyboard.wasKeyPressed(IO.KEYS.Space)) {
             this.reset();
         }
@@ -543,6 +579,8 @@ var WORLD = (function () {
             this.moveLimit = Math.max(this.moveLimit - 1, 2);
         } else if (keyboard.wasAsciiPressed("4")) {
             this.moveLimit = Math.min(this.moveLimit + 1, 20);
+        } else if (keyboard.wasAsciiPressed("L")) {
+            this.load(JSON.parse(editArea.value));
         }
         return true;
     };
