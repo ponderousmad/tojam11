@@ -7,7 +7,7 @@ var WORLD = (function () {
             right: 0,
             down: Math.PI / 2,
             left: Math.PI,
-            up: (3* Math.PI) / 2
+            up: (3 * Math.PI) / 2
         },
         TINTS = [
             [1.0, 0.5, 0.5],
@@ -143,6 +143,10 @@ var WORLD = (function () {
         return false;
     };
     
+    ClockHand.prototype.updating = function () {
+        return this.tickTimer !== null;
+    };
+    
     ClockHand.prototype.draw = function (context, editing, imageScale) {
         context.save();
         var x = this.i * TILE_WIDTH,
@@ -245,7 +249,7 @@ var WORLD = (function () {
             i: this.i,
             j: this.j,
             angle: Math.round(this.startAngle / QTURN),
-            rewind: this.rewind
+            persist: this.persist
         };
         
         if (this.trigger) {
@@ -288,6 +292,8 @@ var WORLD = (function () {
         this.editData = null;
         this.width = width;
         this.height = height;
+        this.replayLimit = 4;
+        this.moveLimit = 5;
         this.tileWidth = TILE_WIDTH;
         this.tileHeight = TILE_HEIGHT;
         this.startI = 0;
@@ -298,8 +304,23 @@ var WORLD = (function () {
         this.stepDelay = 100;
         this.triggers = [];
         this.hands = [];
+        this.gameOver = false;
         this.setupPlayer();
     }
+    
+    World.prototype.reset = function() {
+        this.replayers = [];
+        this.setupPlayer();
+        
+        for (var h = 0; h < this.hands.length; ++h) {
+            var hand = this.hands[h];
+            hand.angle = hand.startAngle;
+        }
+        
+        this.stepTimer = null;
+        this.stepIndex = 0;
+        this.gameOver = false;
+    };
     
     World.prototype.setupPlayer = function () {
         this.player = new AGENT.Player(this.startJ, this.startI);
@@ -339,8 +360,35 @@ var WORLD = (function () {
                 }
             }
         }
-        this.player.update(this, this.stepTimer !== null, sweeping, now, elapsed, keyboard, pointer);
+        this.player.update(this, this.stepTimer !== null || this.gameOver, sweeping, now, elapsed, keyboard, pointer);
+        if (this.player.moves.length >= this.moveLimit && !this.updating()) {
+            if (this.replayers.length < this.replayLimit) {
+                this.rewind();
+            } else {
+                this.gameOver = true;
+            }
+        }
         return true;
+    };
+    
+    World.prototype.updating = function () {
+        if (this.stepTimer !== null) {
+            return true;
+        }
+        if (this.player.updating()) {
+            return true;
+        }
+        for (var r = 0; r < this.replayers.length; ++r) {
+            if (this.replayers[r].updating()) {
+                return true;
+            }
+        }
+        for (var h = 0; h <  this.hands.length; ++h) {
+            if (this.hands[h].updating()) {
+                return true;
+            }
+        }
+        return false;
     };
     
     World.prototype.pointerLocation = function (pointer) {
@@ -352,14 +400,24 @@ var WORLD = (function () {
             
             return {
                 x: x, y: y,
-                gridI: Math.min(Math.round(x), this.width),
-                gridJ: Math.min(Math.round(y), this.width),
-                squareI: Math.min(Math.round(x - 0.5), this.width - 1),
-                squareJ: Math.min(Math.round(y - 0.5), this.height - 1)
+                gridI: Math.round(x),
+                gridJ: Math.round(y),
+                squareI: Math.round(x - 0.5),
+                squareJ: Math.round(y - 0.5)
             };
         }
         
         return null;
+    };
+    
+    World.prototype.clampPoint = function (point) {
+        return {
+            x: point.x, y: point.y,
+            gridI: Math.min(point.gridI, this.width),
+            gridJ: Math.min(point.gridJ, this.width),
+            squareI: Math.min(point.squareI, this.width - 1),
+            squareJ: Math.min(point.squareJ, this.height - 1)
+        };
     };
     
     World.prototype.editUpdate = function (now, elapsed, keyboard, pointer) {
@@ -369,8 +427,10 @@ var WORLD = (function () {
             } else {
                 this.editData = {};
             }
-        } else if(keyboard.wasAsciiPressed("S")) {
+        } else if (keyboard.wasAsciiPressed("S")) {
             console.log(this.save());
+        } else if (keyboard.wasKeyPressed(IO.KEYS.Space)) {
+            this.reset();
         }
         if (this.editData === null) {
             return false;
@@ -409,6 +469,7 @@ var WORLD = (function () {
                     }
                 }
                 if (!edit.trigger) {
+                    at = this.clampPoint(at);
                     edit.trigger = new Trigger(at.squareI, at.squareJ, TRIGGER_ACTIONS.Clockwise);
                     this.triggers.push(edit.trigger);
                 }
@@ -424,6 +485,7 @@ var WORLD = (function () {
                     }
                 }
                 if (!edit.hand) {
+                    at = this.clampPoint(at);
                     edit.hand = new ClockHand(at.gridI, at.gridJ, 0, null, false);
                     this.hands.push(edit.hand);
                 }
@@ -606,6 +668,8 @@ var WORLD = (function () {
             height: this.height,
             startI: this.startI,
             startJ: this.startJ,
+            replayLimit: this.replayLimit,
+            moveLimit: this.moveLimit,
             triggers: this.saveTriggers(),
             hands: this.saveHands()
         };
@@ -633,6 +697,8 @@ var WORLD = (function () {
         this.height = data.height;
         this.startI = data.startI;
         this.startJ = data.startJ;
+        this.replayLimit = data.replayLimit ? data.replayLimit : 4;
+        this.moveLimit = data.moveLimit ? data.moveLimit : 5;
         this.triggers = [];
         this.hands = [];
         this.replayers = [];

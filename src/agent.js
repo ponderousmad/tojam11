@@ -77,10 +77,7 @@ var AGENT = (function () {
             }
             return;
         }
-        if (keyboard.wasKeyPressed(IO.KEYS.Space)) {
-            world.rewind(this);
-        }
-        else if (keyboard.wasKeyPressed(IO.KEYS.Up)) {
+        if (keyboard.wasKeyPressed(IO.KEYS.Up)) {
             this.tryMove(world, 0, -1);
         }
         else if (keyboard.wasKeyPressed(IO.KEYS.Down)) {
@@ -92,6 +89,16 @@ var AGENT = (function () {
         else if (keyboard.wasKeyPressed(IO.KEYS.Right)) {
             this.tryMove(world, 1, 0);
         }
+    };
+    
+    Player.prototype.updating = function () {
+        if (this.moveTimer !== null) {
+            return true;
+        }
+        if (this.push !== null) {
+            return true;
+        }
+        return false;
     };
 
     Player.prototype.tryMove = function (world, iStep, jStep) {
@@ -167,6 +174,13 @@ var AGENT = (function () {
     
     Replayer.prototype.update = function (world, now, elapsed) {
         updatePush(world, this);
+    };
+    
+    Replayer.prototype.updating = function () {
+        if (this.push !== null) {
+            return true;
+        }
+        return false;
     };
     
     Replayer.prototype.rewind = function () {
