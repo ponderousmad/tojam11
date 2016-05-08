@@ -9,6 +9,14 @@ var WORLD = (function () {
             left: Math.PI,
             up: (3* Math.PI) / 2
         },
+        TINTS = [
+            [1.0, 0.5, 0.5],
+            [0.5, 1.5, 0.5],
+            [0.5, 0.5, 1.5],
+            [1.5, 1.5, 0.5],
+            [0.5, 1.5, 1.5],
+            [1.5, 0.5, 1.5]
+        ],
         TRIGGER_ACTIONS = {
             Exit: 0,
             Clockwise: 1,
@@ -22,7 +30,10 @@ var WORLD = (function () {
         batch = new BLIT.Batch("images/"),
         tile2x2 = batch.load("floor-tile.png"),
         handImage = batch.load("clock-hand.png"),
-        fixedHandImage = batch.load("clock-hand-fixed.png");
+        fixedHandImage = batch.load("clock-hand-fixed.png"),
+        crankImage = batch.load("crank-left.png"),
+        crankImageTint = batch.load("crank-left-2.png"),
+        nextTint = 0;
         
     (function () {
         batch.commit();
@@ -44,11 +55,21 @@ var WORLD = (function () {
         }
         return (qTurns % 4) * QTURN;
     }
+    
+    function fixTint(tint) {
+        if (parseInt(tint, 10) === tint) {
+            return tint % TINTS.length;
+        }
+        tint = nextTint;
+        nextTint = fixTint(nextTint + 1);
+        return tint;
+    }
 
-    function Trigger(i, j, action) {
+    function Trigger(i, j, action, tint) {
         this.i = i;
         this.j = j;
         this.action = action;
+        this.tint = fixTint(tint);
     }
     
     Trigger.prototype.contains = function (entity) {
@@ -69,7 +90,17 @@ var WORLD = (function () {
         return "black";
     };
     
-    Trigger.prototype.draw = function (context) {
+    Trigger.prototype.draw = function (context, scale) {
+        if (this.action == TRIGGER_ACTIONS.Clockwise || this.action == TRIGGER_ACTIONS.Counterclock) {
+            var mirror = this.action == TRIGGER_ACTIONS.Counterclock,
+                x = (this.i + 0.5) * TILE_WIDTH,
+                y = (this.j + 0.5) * TILE_WIDTH,
+                width = crankImage.width * scale,
+                height = crankImage.height * scale;
+            BLIT.draw(context, crankImage, x, y, BLIT.ALIGN.Center, width, height, mirror);
+            BLIT.draw(context, crankImageTint, x, y, BLIT.ALIGN.Center, width, height, mirror, TINTS[this.tint]);
+            return;
+        }
         context.save();
         context.fillStyle = this.style();
         context.fillRect(this.i * TILE_WIDTH, this.j * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
@@ -80,7 +111,8 @@ var WORLD = (function () {
         return {
             i: this.i,
             j: this.j,
-            action: actionName(this.action)
+            action: actionName(this.action),
+            tint: this.tint
         };
     };
     
@@ -126,7 +158,7 @@ var WORLD = (function () {
             context.fillStyle = "rgb(0,0,127)";
         }
         var image = this.trigger ? handImage : fixedHandImage,
-            tint = this.trigger ? [1.0, 0.5, 0.5] : null;
+            tint = this.trigger ? TINTS[this.trigger.tint] : null;
         BLIT.draw(context, image, -HAND_PIVOT, -HAND_PIVOT, BLIT.ALIGN.TopLeft, 0, 0, BLIT.MIRROR.None, tint);
         context.restore();
         
@@ -417,6 +449,14 @@ var WORLD = (function () {
             } else if (edit.lastTrigger !== null) {
                 edit.lastTrigger.action = (edit.lastTrigger.action + 1) % TRIGGER_ACTIONS.COUNT;
             }
+        } else if (keyboard.wasAsciiPressed("C")) {
+            var colorTrigger = edit.lastTrigger;
+            if (edit.lastHand !== null && edit.lastHand.trigger) {
+                colorTrigger = edit.lastHand.trigger;
+            }
+            if (colorTrigger !== null) {
+                colorTrigger.tint = fixTint(colorTrigger.tint + 1);
+            }
         }
         return true;
     };
@@ -448,7 +488,7 @@ var WORLD = (function () {
         }
         
         for (var t = 0; t < this.triggers.length; ++t) {
-            this.triggers[t].draw(context);
+            this.triggers[t].draw(context, scale);
         }
         
         for (var h = 0; h < this.hands.length; ++h) {
@@ -597,8 +637,8 @@ var WORLD = (function () {
         this.replayers = [];
         
         for (var t = 0; t < data.triggers.length; ++t) {
-            var triggerData = data.triggers[t];
-            this.triggers.push(new Trigger(triggerData.i, triggerData.j, TRIGGER_ACTIONS[triggerData.action]));
+            var tData = data.triggers[t];
+            this.triggers.push(new Trigger(tData.i, tData.j, TRIGGER_ACTIONS[tData.action], tData.tint));
         }
         
         for (var h = 0; h < data.hands.length; ++h) {

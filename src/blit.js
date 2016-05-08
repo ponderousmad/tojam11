@@ -147,7 +147,7 @@ var BLIT = (function () {
         }
         
         if (tint) {
-            drawTinted(context, image, x * scaleX, y * scaleY, width, height, tint);
+            drawTinted(context, image, x, y, width, height, tint);
         } else {
             context.drawImage(image, x, y, width, height);
         }
