@@ -31,24 +31,20 @@ var MAIN = (function (game) {
             context = canvas.getContext("2d"),
             pointer = new IO.Pointer(canvas),
             keyboard = new IO.Keyboard(window),
-            lastTime = TICK.now(),
-            update = function () {
-                var now = TICK.now(),
-                    elapsed = now - lastTime;
-                pointer.update(elapsed);
-                
-                if (game) {
-                    game.update(now, elapsed, keyboard, pointer);
-                } else {
-                    testFlip.update(elapsed);
-                }
-                
-                keyboard.postUpdate();
-                lastTime = now;
-            };
+            lastTime = TICK.now();
 
         function drawFrame() {
             requestAnimationFrame(drawFrame);
+            
+            var now = TICK.now(),
+                elapsed = Math.min(now - lastTime, 32);
+            pointer.update(elapsed);
+            
+            if (game) {
+                game.update(now, elapsed, keyboard, pointer);
+            } else {
+                testFlip.update(elapsed);
+            }
             
             canvas.width  = safeWidth();
             canvas.height = safeHeight();
@@ -61,9 +57,10 @@ var MAIN = (function (game) {
                 BLIT.draw(context, testImage, 100, 100, BLIT.ALIGN.Center, 0, 0, BLIT.MIRROR.Horizontal);
                 testFlip.draw(context, 200, 50, BLIT.ALIGN.Left, 0, 0, BLIT.MIRROR.Vertical);
             }
+            
+            keyboard.postUpdate();
+            lastTime = now;
         }
-
-        window.setInterval(update, 16);
 
         drawFrame();
 
