@@ -58,6 +58,7 @@ var WORLD = (function () {
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01.wav"),
         tickSound = new BLORT.Noise("sounds/clockturn01.wav"),
+        alarmSound = new BLORT.Noise("sounds/alarm.wav"),
         deathSounds = [],
         musicTracks = [],
         music = null,
@@ -988,6 +989,7 @@ var WORLD = (function () {
                     exits.push(other);
                 }
             }
+            alarmSound.play();
             this.rewinder.add(new Unring(trigger, exits));
         }
     };
