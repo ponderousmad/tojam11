@@ -2,10 +2,17 @@ var AGENT = (function () {
     "use strict";
     
     var PLAYER_FRAME_TIME = 32,
+        REWIND_FRAME_TIME = 10,
         batch = new BLIT.Batch("images/"),
         playerAnim = new BLIT.Flip(batch, "mouse-A-idle-2_", 20, 2).setupPlayback(PLAYER_FRAME_TIME, true),
+        playerRewind = new BLIT.Flip(batch, "mouse-A-rewind-", 1, 2).setupPlayback(REWIND_FRAME_TIME, true),
         playerWalkFlip = new BLIT.Flip(batch, "mouse-A-walk-00_", 10, 2),
-        replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true);
+        replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true),
+        replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-", 1, 2).setupPlayback(REWIND_FRAME_TIME, true),
+        loopAnims = [
+            playerAnim, playerRewind, replayerAnim, replayerRewind
+        ];
+    
 
     (function () {
         batch.commit();
@@ -20,11 +27,22 @@ var AGENT = (function () {
         player.j += move.j;
     }
     
+    function doRewind(player, i, j, iDir, unsquishFraction) {
+        player.rewinding = true;
+        player.i = i;
+        player.j = j;
+        if (iDir !== 0) {
+            player.facing = iDir > 0;
+        }
+        if (unsquishFraction !== null) {
+        }
+    }
+    
     function updatePush(world, player) {
         if (player.push !== null) {
             if (!player.push.hand.moving()) {
                 doMove(world, player, player.push.move);
-                world.moved(player, true, false);
+                world.moved(player, null, true, false);
                 player.push = null;
             }
             return true;
@@ -51,6 +69,7 @@ var AGENT = (function () {
         this.push = null;
         this.facing = BLIT.MIRROR.None;
         this.walk = null;
+        this.rewinding = false;
     }
     
     Player.prototype.update = function (world, waiting, sweeping, now, elapsed, keyboard, pointer) {
@@ -73,7 +92,7 @@ var AGENT = (function () {
                     doMove(world, this, move);
                     relocated = true;
                 }
-                world.moved(this, relocated, true);
+                world.moved(this, move, relocated, true);
             }
             return;
         }
@@ -118,29 +137,39 @@ var AGENT = (function () {
         return this.i == i && this.j == j;
     };
     
+    Player.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
+        doRewind(this, i, j, iDir, unsquishFraction);
+    };
+    
     Player.prototype.draw = function (context, world, imageScale) {
         var x = this.i * world.tileWidth,
             y = this.j * world.tileHeight,
+            anim = null,
             move = null,
             moveFraction = 0;
         
-        if (this.push !== null) {
-            moveFraction = this.push.hand.moveFraction();
-            move = this.push.move;
-        } else if (this.moveTimer !== null) {
-            moveFraction = 1 - this.moveTimer / world.stepDelay;
-            move = this.moves[this.moves.length-1];   
-        }
-        
-        if (move !== null) {
-            if (moveFraction > 0.5 && !canMove(world, this, move)) {
-                moveFraction = 1 - moveFraction;
+        if (this.rewinding) {
+            anim = playerRewind;
+        } else {
+            anim = this.walk !== null ? this.walk : playerAnim;
+            if (this.push !== null) {
+                moveFraction = this.push.hand.moveFraction();
+                move = this.push.move;
+            } else if (this.moveTimer !== null) {
+                moveFraction = 1 - this.moveTimer / world.stepDelay;
+                move = this.moves[this.moves.length-1];   
             }
-            x += moveFraction * move.i * world.tileWidth;
-            y += moveFraction * move.j * world.tileHeight;
+
+            if (move !== null) {
+                if (moveFraction > 0.5 && !canMove(world, this, move)) {
+                    moveFraction = 1 - moveFraction;
+                }
+                x += moveFraction * move.i * world.tileWidth;
+                y += moveFraction * move.j * world.tileHeight;
+            }
         }
         
-        draw(context, world, this.walk !== null ? this.walk : playerAnim, x, y, this.facing, imageScale);
+        draw(context, world, anim, x, y, this.facing, imageScale);
     };
     
     function Replayer(i, j, moves) {
@@ -152,6 +181,7 @@ var AGENT = (function () {
         this.moveIndex = 0;
         this.push = null;
         this.facing = BLIT.MIRROR.None;
+        this.rewinding = false;
     }
     
     Replayer.prototype.step = function (world) {
@@ -168,7 +198,7 @@ var AGENT = (function () {
             doMove(world, this, move);
             relocated = true;
         }
-        world.moved(this, relocated, false);
+        world.moved(this, move, relocated, false);
         this.moveIndex += 1;
     };
     
@@ -187,6 +217,11 @@ var AGENT = (function () {
         this.moveIndex = 0;
         this.i = this.startI;
         this.j = this.startJ;
+        this.rewinding = false;
+    };
+    
+    Replayer.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
+        doRewind(this, i, j, iDir, unsquishFraction);
     };
 
     Replayer.prototype.isAt = function (i, j) {
@@ -198,31 +233,34 @@ var AGENT = (function () {
     };
     
     Replayer.prototype.draw = function (context, world, imageScale, moveFraction) {
-        context.save();
         var x = this.i * world.tileWidth,
             y = this.j * world.tileHeight,
-            move = null;
+            move = null,
+            anim = replayerAnim;
         
-        if (this.push !== null) {
-            move = this.push.move;
-            moveFraction = this.push.hand.moveFraction();
-        } if (moveFraction !== null && this.moveIndex < this.moves.length) {
-            move = this.moves[this.moveIndex];
-            if (!canMove(world, this, move) & moveFraction > 0.5) {
-                moveFraction = 1 - moveFraction;
+        if (this.rewinding) {
+            anim = replayerRewind;
+        } else {
+            if (this.push !== null) {
+                move = this.push.move;
+                moveFraction = this.push.hand.moveFraction();
+            } if (moveFraction !== null && this.moveIndex < this.moves.length) {
+                move = this.moves[this.moveIndex];
+                if (!canMove(world, this, move) & moveFraction > 0.5) {
+                    moveFraction = 1 - moveFraction;
+                }
+            }
+            if (move !== null) {
+                x += world.tileWidth * move.i * moveFraction;
+                y += world.tileWidth * move.j * moveFraction;
             }
         }
-        if (move !== null) {
-            x += world.tileWidth * move.i * moveFraction;
-            y += world.tileWidth * move.j * moveFraction;
-        }
-        draw(context, world, replayerAnim, x, y, this.facing, imageScale);
-        context.restore();
+        draw(context, world, anim, x, y, this.facing, imageScale);
     };
     
     return {
         Player: Player,
         Replayer: Replayer,
-        updateAnims: function(elapsed) { BLIT.updatePlaybacks(elapsed, [playerAnim, replayerAnim]); }
+        updateAnims: function(elapsed) { BLIT.updatePlaybacks(elapsed, loopAnims); }
     };
 }());

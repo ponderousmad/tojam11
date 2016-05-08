@@ -25,7 +25,10 @@ var WORLD = (function () {
             COUNT: 4
         },
         QTURN = Math.PI / 2,
-        TICK_TIME = 50,
+        TICK_TIME = 64,
+        UNTICK_TIME = 32,
+        UNMOVE_TIME = 64,
+        REWIND_PAUSE = 250,
         HAND_PIVOT = 48,
         batch = new BLIT.Batch("images/"),
         background = batch.load("bg.png"),
@@ -251,7 +254,8 @@ var WORLD = (function () {
             i: startI, j: startJ,
             newI: startI + sweepI, newJ: startJ + sweepJ,
             move: { i: sweepI, j: sweepJ },
-            hand: this
+            hand: this,
+            direction: dir
         };
     };
     
@@ -298,6 +302,90 @@ var WORLD = (function () {
         return 1;
     };
     
+    function Untick(hand, direction, sweeps) {
+        this.hand = hand;
+        this.startAngle = hand.angle;
+        this.angleDelta = - direction * QTURN;
+        this.sweeps = sweeps;
+        this.time = UNTICK_TIME;
+    }
+    
+    Untick.prototype.update = function (world, fraction) {
+        if (!this.hand.persist) {
+            this.hand.angle = this.startAngle + this.angleDelta * fraction;
+        }
+        for (var s = 0; s < this.sweeps.length; ++s) {
+            this.sweeps[s].update(world, fraction);
+        }
+    };
+    
+    function Unmove(player, move, relocated) {
+        this.player = player;
+        this.i = player.i;
+        this.j = player.j;
+        this.move = relocated ? { i: -move.i, j: -move.j } : move;
+        this.relocated = relocated;
+        this.time = UNMOVE_TIME;
+    }
+    
+    Unmove.prototype.update = function (world, fraction) {
+        if (!this.relocated && fraction > 0.5) {
+            fraction = 1 - fraction;
+        }
+        this.player.rewindTo(
+            this.i + (this.move.i * fraction),
+            this.j + (this.move.j * fraction),
+            this.relocated ? this.move.i : 0,
+            null
+        );
+    };
+    
+    function Unsquish(player) {
+        this.player = player;
+        this.i = player.i;
+        this.j = player.j;
+    }
+    
+    Unsquish.prototype.update = function (world, fraction) {
+        this.player.drawAt(this.i, this.j, 0, fraction);
+    };
+    
+    function Rewinder() {
+        this.actions = [];
+        this.timer = null;
+    }
+
+    Rewinder.prototype.update = function (world, now, elapsed) {
+        if (this.actions.length === 0) {
+            if (this.timer === null) {
+                this.timer = REWIND_PAUSE;
+            }
+            this.timer -= elapsed;
+            return this.timer > 0;
+        }
+        var lastAction = this.actions[this.actions.length - 1];
+        if (this.timer === null) {
+            this.timer = lastAction.time;
+        } else {
+            this.timer -= elapsed;
+        }
+        var fraction = this.timer < 0 ? 1.0 : 1.0 - (this.timer / lastAction.time);
+        lastAction.update(world, fraction);
+        if (this.timer < 0) {
+            this.actions.pop();
+            if (this.actions.length > 0) {
+                this.timer = this.actions[this.actions.length - 1].time;
+            } else {
+                this.timer = REWIND_PAUSE;
+            }
+        }
+        return true;
+    };
+    
+    Rewinder.prototype.add = function (action) {
+        this.actions.push(action);
+    };
+    
     function World(width, height) {
         this.loading = false;
         this.editData = null;
@@ -317,6 +405,8 @@ var WORLD = (function () {
         this.stepDelay = 100;
         this.triggers = [];
         this.hands = [];
+        this.rewinder = new Rewinder();
+        this.rewinding = false;
         this.gameOver = false;
         this.setupPlayer();
     }
@@ -357,6 +447,14 @@ var WORLD = (function () {
         }
         
         AGENT.updateAnims(elapsed);
+        
+        if (this.rewinding) {
+            BLIT.updatePlaybacks(elapsed, [goat]);
+            if (!this.rewinder.update(this, now, elapsed)) {
+                this.rewound();
+            }
+            return;
+        }
 
         var sweeping = false;
         for (var h = 0; h < this.hands.length; ++h) {
@@ -365,10 +463,6 @@ var WORLD = (function () {
 
         for (var r = 0; r < this.replayers.length; ++r) {
             sweeping |= this.replayers[r].update(this, now, elapsed);
-        }
-        
-        if (sweeping || this.stepTimer) {
-            BLIT.updatePlaybacks(elapsed, [goat]);
         }
         
         if (!sweeping && this.stepTimer !== null) {
@@ -388,7 +482,7 @@ var WORLD = (function () {
         this.player.update(this, this.stepTimer !== null || this.gameOver, sweeping, now, elapsed, keyboard, pointer);
         if (this.player.moves.length >= this.moveLimit && !this.updating()) {
             if (this.replayers.length < this.replayLimit) {
-                this.rewind();
+                this.rewinding = true;
             } else {
                 this.gameOver = true;
             }
@@ -659,7 +753,7 @@ var WORLD = (function () {
             for (var r = 0; r < this.replayers.length; ++r) {
                 var replayer = this.replayers[r],
                     stepFraction = null;
-                if (replayer.j != row) {
+                if (Math.floor(replayer.j) != row) {
                     continue;
                 }
                 if (this.stepIndex == r && this.stepTimer !== null) {
@@ -667,7 +761,7 @@ var WORLD = (function () {
                 }
                 replayer.draw(context, this, scale, stepFraction);
             }
-            if (this.player.j == row) {
+            if (Math.floor(this.player.j) == row) {
                 this.player.draw(context, this, scale);
             }
         }
@@ -710,32 +804,42 @@ var WORLD = (function () {
         return true;
     };
     
-    World.prototype.moved = function (agent, relocated, playerControlled) {
+    World.prototype.moved = function (agent, move, relocated, playerControlled) {
         if (playerControlled) {
             this.startRestep();
         }
         for (var t = 0; t < this.triggers.length; ++t) {
             var trigger = this.triggers[t];
             if (relocated && trigger.contains(agent)) {
-                if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
-                    for (var h = 0; h < this.hands.length; ++h) {
-                        var hand = this.hands[h];
-                        if (hand.trigger == trigger) {
-                            var push = hand.turn();
-                            this.sweep(push);
-                        }
-                    }
+                this.activateTrigger(trigger, agent);
+            }
+        }
+        if (move !== null) {
+            this.rewinder.add(new Unmove(agent, move, relocated));
+        }
+    };
+    
+    World.prototype.activateTrigger = function (trigger, agent) {
+        if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
+            for (var h = 0; h < this.hands.length; ++h) {
+                var hand = this.hands[h];
+                if (hand.trigger == trigger) {
+                    var push = hand.turn();
+                    this.sweep(push);
                 }
             }
         }
     };
     
     World.prototype.sweep = function (push) {
+        var sweeps = [];
         if (this.player.isAt(push.i, push.j)) {
             if (this.canMove(this.player, push.newI, push.newJ, push.hand)) {
                 this.player.sweep(push);
+                sweeps.push(new Unmove(this.player, push.move, true));
             } else {
                 this.squish(this.player);
+                sweeps.push(new Unsquish(this.player));
             }
         }
         
@@ -744,11 +848,14 @@ var WORLD = (function () {
             if (replayer.isAt(push.i, push.j)) {
                 if (this.canMove(replayer, push.newI, push.newJ, push.hand)) {
                     replayer.sweep(push);
+                    sweeps.push(new Unmove(replayer, push.move, true));
                 } else {
                     this.squish(replayer);
+                    sweeps.push(new Unsquish(replayer));
                 }
             }
         }
+        this.rewinder.add(new Untick(push.hand, push.direction, sweeps));
     };
     
     World.prototype.startRestep = function () {
@@ -757,7 +864,7 @@ var WORLD = (function () {
         }
     };
     
-    World.prototype.rewind = function () {
+    World.prototype.rewound = function () {
         for (var r = 0; r < this.replayers.length; ++r) {
             this.replayers[r].rewind();
         }
@@ -766,6 +873,10 @@ var WORLD = (function () {
         }
         this.replayers.push(new AGENT.Replayer(this.startI, this.startJ, this.player.moves));
         this.setupPlayer();
+
+        this.rewinder = new Rewinder();
+        this.rewinding = false;
+
         this.startRestep();
     };
     
