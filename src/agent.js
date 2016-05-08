@@ -4,6 +4,7 @@ var AGENT = (function () {
     var PLAYER_FRAME_TIME = 32,
         batch = new BLIT.Batch("images/"),
         playerAnim = new BLIT.Flip(batch, "mouse-A-idle-2_", 20, 2).setupPlayback(PLAYER_FRAME_TIME, true),
+        playerWalkFlip = new BLIT.Flip(batch, "mouse-A-walk-00_", 10, 2),
         replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true);
 
     (function () {
@@ -31,7 +32,7 @@ var AGENT = (function () {
         return false;
     }
     
-    function draw(context, world, anim, x, y, scale) {
+    function draw(context, world, anim, x, y, facing, scale) {
         if (!batch.loaded) {
             return;
         }
@@ -39,7 +40,7 @@ var AGENT = (function () {
         y += world.tileHeight * 0.5;
         var width = anim.width(),
             height = anim.height();
-        anim.draw(context, x, y, BLIT.ALIGN.Center, width * scale, height * scale);
+        anim.draw(context, x, y, BLIT.ALIGN.Center, width * scale, height * scale, facing);
     }
     
     function Player(i, j) {
@@ -48,10 +49,17 @@ var AGENT = (function () {
         this.moves = [];
         this.moveTimer = null;
         this.push = null;
+        this.facing = BLIT.MIRROR.None;
+        this.walk = null;
     }
     
-    Player.prototype.update = function (world, sweeping, now, elapsed, keyboard, pointer) {
-        if (sweeping) {
+    Player.prototype.update = function (world, waiting, sweeping, now, elapsed, keyboard, pointer) {
+        if (this.walk !== null) {
+            if (this.walk.update(elapsed)) {
+                this.walk = null;
+            }
+        }
+        if (waiting || sweeping) {
             updatePush(world, this);
             return;
         }
@@ -89,6 +97,10 @@ var AGENT = (function () {
     Player.prototype.tryMove = function (world, iStep, jStep) {
         this.moves.push({i:iStep, j:jStep});
         this.moveTimer = world.stepDelay;
+        if (iStep !== 0) {
+            this.facing = iStep < 0 ? BLIT.MIRROR.Horizontal : BLIT.MIRROR.None;
+        }
+        this.walk = playerWalkFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
     
     Player.prototype.sweep = function(push) {
@@ -121,7 +133,7 @@ var AGENT = (function () {
             y += moveFraction * move.j * world.tileHeight;
         }
         
-        draw(context, world, playerAnim, x, y, imageScale);
+        draw(context, world, this.walk !== null ? this.walk : playerAnim, x, y, this.facing, imageScale);
     };
     
     function Replayer(i, j, moves) {
@@ -132,6 +144,7 @@ var AGENT = (function () {
         this.moves = moves;
         this.moveIndex = 0;
         this.push = null;
+        this.facing = BLIT.MIRROR.None;
     }
     
     Replayer.prototype.step = function (world) {
@@ -141,6 +154,9 @@ var AGENT = (function () {
         
         var move = this.moves[this.moveIndex],
             relocated = false;
+        if (move.i !== 0) {
+            this.facing = move.i < 0 ? BLIT.MIRROR.Horizontal : BLIT.MIRROR.None;
+        }
         if (canMove(world, this, move)) {
             doMove(world, this, move);
             relocated = true;
@@ -186,7 +202,7 @@ var AGENT = (function () {
             x += world.tileWidth * move.i * moveFraction;
             y += world.tileWidth * move.j * moveFraction;
         }
-        draw(context, world, replayerAnim, x, y, imageScale);
+        draw(context, world, replayerAnim, x, y, this.facing, imageScale);
         context.restore();
     };
     

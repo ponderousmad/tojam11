@@ -1,8 +1,8 @@
 var WORLD = (function () {
     "use strict";
     
-    var TILE_WIDTH = 60,
-        TILE_HEIGHT = 60,
+    var TILE_WIDTH = 80,
+        TILE_HEIGHT = 80,
         DIRECTIONS = {
             right: 0,
             down: Math.PI / 2,
@@ -306,9 +306,8 @@ var WORLD = (function () {
                     this.stepTimer += this.stepDelay;
                 }
             }
-        } else {
-            this.player.update(this, sweeping, now, elapsed, keyboard, pointer);
         }
+        this.player.update(this, this.stepTimer !== null, sweeping, now, elapsed, keyboard, pointer);
         return true;
     };
     

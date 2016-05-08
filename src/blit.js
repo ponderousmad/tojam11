@@ -189,7 +189,7 @@ var BLIT = (function () {
             timePerFrame: frameTime,
             fractionComplete: time / (frameTime * this.frames.length),
             loop: loop === true,
-            update: function (elapsed) { flip.updatePlayback(elapsed, this); },
+            update: function (elapsed) { return flip.updatePlayback(elapsed, this); },
             draw: function (context, x, y, alignment, width, height, mirror, tint) {
                 flip.draw(context, this, x, y, alignment, width, height, mirror, tint);
             },
