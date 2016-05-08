@@ -592,13 +592,13 @@ var WORLD = (function () {
         } else if (keyboard.wasAsciiPressed("2")) {
             this.height = Math.min(this.height + 1, 10);
         } else if (keyboard.wasAsciiPressed("3") && keyboard.isShiftDown()) {
-            this.replayLimit = Math.max(this.replayLimit - 1, 2);
-        } else if (keyboard.wasAsciiPressed("3")) {
-            this.replayLimit = Math.min(this.replayLimit + 1, 5);
-        } else if (keyboard.wasAsciiPressed("4") && keyboard.isShiftDown()) {
             this.moveLimit = Math.max(this.moveLimit - 1, 2);
-        } else if (keyboard.wasAsciiPressed("4")) {
+        } else if (keyboard.wasAsciiPressed("3")) {
             this.moveLimit = Math.min(this.moveLimit + 1, 20);
+        } else if (keyboard.wasAsciiPressed("4") && keyboard.isShiftDown()) {
+            this.replayLimit = Math.max(this.replayLimit - 1, 2);
+        } else if (keyboard.wasAsciiPressed("4")) {
+            this.replayLimit = Math.min(this.replayLimit + 1, 5);
         } else if (keyboard.wasAsciiPressed("L")) {
             this.load(JSON.parse(editArea.value));
         }
