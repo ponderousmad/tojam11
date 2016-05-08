@@ -37,6 +37,7 @@ var WORLD = (function () {
         crankImageTint = batch.load("crank-left-2.png"),
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
+        goat = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
         nextTint = 0,
         editArea = null;
         
@@ -366,6 +367,10 @@ var WORLD = (function () {
             sweeping |= this.replayers[r].update(this, now, elapsed);
         }
         
+        if (sweeping || this.stepTimer) {
+            BLIT.updatePlaybacks(elapsed, [goat]);
+        }
+        
         if (!sweeping && this.stepTimer !== null) {
             this.stepTimer -= elapsed;
             
@@ -601,6 +606,7 @@ var WORLD = (function () {
     };
     
     World.prototype.draw = function (context, width, height) {
+        context.font = "12px serif";
         if (this.loading || !batch.loaded) {
             BLIT.centeredText(context, "LOADING", width / 2, height / 2);
             return;
@@ -665,6 +671,14 @@ var WORLD = (function () {
                 this.player.draw(context, this, scale);
             }
         }
+        var moveText = "Moves: " + (this.moveLimit - this.player.moves.length) + " / " + this.moveLimit,
+            replayText = "Rewinds: " + (this.replayLimit - this.replayers.length) + " / " + this.replayLimit,
+            fill = "rgb(255,255,255)",
+            shadow = "rgb(0,0,0)";
+        BLIT.centeredText(context, moveText, this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
+        BLIT.centeredText(context, replayText, 2 * this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
+        
+        goat.draw(context, -this.tileHeight * 0.5, this.totalHeight() + this.tileHeight * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale);
         
         context.restore();
     };
