@@ -821,15 +821,23 @@ var WORLD = (function () {
             context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
         }
         
-        for (var t = 0; t < this.triggers.length; ++t) {
-            this.triggers[t].draw(context, this, scale);
-        }
         
-        for (var h = 0; h < this.hands.length; ++h) {
-            this.hands[h].draw(context, this, this.editData !== null, scale);
-        }
         
         for (var row = 0; row < this.height; ++row) {
+            for (var h = 0; h < this.hands.length; ++h) {
+                if (this.hands[h].j === row) {
+                    this.hands[h].draw(context, this, this.editData !== null, scale);
+                }
+            }
+            
+            for (var t = 0; t < this.triggers.length; ++t) {
+                if (this.triggers[t].j === row) {
+                    this.triggers[t].draw(context, this, scale);
+                }
+            }
+        }
+        
+        for (row = 0; row < this.height; ++row) {
             for (var r = 0; r < this.replayers.length; ++r) {
                 var replayer = this.replayers[r],
                     stepFraction = null;
