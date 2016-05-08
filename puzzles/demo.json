@@ -1,0 +1,68 @@
+{
+    "width": 6,
+    "height": 4,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 4,
+    "moveLimit": 5,
+    "triggers": [
+        {
+            "i": 3,
+            "j": 1,
+            "action": "Clockwise",
+            "tint": 0
+        },
+        {
+            "i": 2,
+            "j": 0,
+            "action": "Clockwise",
+            "tint": 1
+        },
+        {
+            "i": 4,
+            "j": 3,
+            "action": "Mousetrap",
+            "tint": 2
+        }
+    ],
+    "hands": [
+        {
+            "i": 0,
+            "j": 2,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 2,
+            "angle": 0,
+            "persist": false,
+            "trigger": 0
+        },
+        {
+            "i": 2,
+            "j": 2,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 3,
+            "j": 2,
+            "angle": 3,
+            "persist": false,
+            "trigger": 1
+        },
+        {
+            "i": 1,
+            "j": 4,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 4,
+            "angle": 3,
+            "persist": false
+        }
+    ]
+}
