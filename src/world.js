@@ -422,6 +422,8 @@ var WORLD = (function () {
         
         this.stepTimer = null;
         this.stepIndex = 0;
+        this.rewinder = new Rewinder();
+        this.rewinding = false;
         this.gameOver = false;
     };
     
