@@ -563,6 +563,9 @@ var WORLD = (function () {
             if (colorTrigger !== null) {
                 colorTrigger.tint = fixTint(colorTrigger.tint + 1);
             }
+        } else if (keyboard.wasKeyPressed(IO.KEYS.Backspace) && keyboard.isShiftDown()) {
+            this.hands = [];
+            this.triggers = [];
         } else if (keyboard.wasAsciiPressed("1") && keyboard.isShiftDown()) {
             this.width = Math.max(this.width - 1, 4);
         } else if (keyboard.wasAsciiPressed("1")) {

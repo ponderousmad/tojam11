@@ -10,6 +10,7 @@ var IO = (function (TICK, BLORT) {
         Escape : 27,
         Plus : 187,
         Minus : 189,
+        Backspace : 8,
         Delete : 46,
         LT : 188,
         GT : 190
