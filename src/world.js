@@ -52,6 +52,7 @@ var WORLD = (function () {
         trapCheese = batch.load("trap-cheese.png"),
         exitBlockFlip = new BLIT.Flip(batch, "skull_", RING_FRAMES, 2),
         alarmFlip = new BLIT.Flip(batch, "alarm-shake_", RING_FRAMES, 2),
+        titleAnim = new BLIT.Flip(batch, "title_", 12, 2).setupPlayback(32, true),
         alarmImage = batch.load("alarm.png"),
         goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
         goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(32, true),
@@ -65,17 +66,14 @@ var WORLD = (function () {
         nextTint = 0,
         entropy = ENTROPY.makeRandom(),
         puzzles = [
-            "puzzles/demo.json",
-            "puzzles/test.json"
-            /*
             "puzzles/puzzle1.json",
             "puzzles/puzzle2.json",
             "puzzles/puzzle3.json",
             "puzzles/puzzle4.json",
             "puzzles/puzzle5.json",
             "puzzles/puzzle6.json",
-            "puzzles/puzzle7.json"
-            */
+            "puzzles/puzzle7.json",
+            "puzzles/puzzle8.json"
         ],
         puzzleIndex = 0,
         editArea = null;
@@ -562,6 +560,14 @@ var WORLD = (function () {
             music.setVolume(volume);
         }
 
+        if (titleAnim) {
+            titleAnim.update(elapsed);
+            if (keyboard.keysDown() > 0) {
+                titleAnim = null;
+            }
+            return true;
+        }
+
         if (this.editUpdate(now, elapsed, keyboard, pointer)) {
             return true;
         }
@@ -854,6 +860,18 @@ var WORLD = (function () {
         }
         BLIT.draw(context, background, width * 0.5, height * 0.5, BLIT.ALIGN.Center, bgWidth, bgHeight);
         
+        if (titleAnim) {
+            var titleWidth = width,
+                titleHeight = (width / titleAnim.width()) * titleAnim.height;
+            if ((titleAnim.width() / titleAnim.height()) > (width / height)) {
+                titleHeight = height;
+                titleWidth = (height / titleAnim.height()) * titleAnim.width();
+            }
+            
+            titleAnim.draw(context, width * 0.5, height * 0.5, BLIT.ALIGN.Center, titleWidth * 0.75, titleHeight * 0.75);
+            return;
+        }
+        
         context.save();
         this.xOffset = Math.floor((width - this.totalWidth()) / 2);
         this.yOffset = Math.floor((height - this.totalHeight()) / 2);
@@ -880,8 +898,6 @@ var WORLD = (function () {
             }
             context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
         }
-        
-        
         
         for (var row = 0; row < this.height; ++row) {
             for (var h = 0; h < this.hands.length; ++h) {
