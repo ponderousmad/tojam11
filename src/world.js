@@ -893,7 +893,7 @@ var WORLD = (function () {
         BLIT.centeredText(context, replayText, 2 * this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
         
         var goat = this.rewinding ? goatExcited : goatStoic;
-        goat.draw(context, -this.tileHeight * 0.5, this.totalHeight() + this.tileHeight * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale);
+        goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
         
         context.restore();
     };
