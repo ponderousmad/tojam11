@@ -10,8 +10,9 @@ var AGENT = (function () {
         playerWalkFlip = new BLIT.Flip(batch, "mouse-A-walk-00_", 10, 2),
         playerDeathFlip = new BLIT.Flip(batch, "mouse-A-dead_", DEATH_FRAMES, 2),
         playerWinFlip = new BLIT.Flip(batch, "mouse-hole_", 14, 2),
-        replayerAnim = new BLIT.Flip(batch, "mouse-B-idle-", 1, 2).setupPlayback(PLAYER_FRAME_TIME, true),
+        replayerAnim = new BLIT.Flip(batch, "mouse-B-idle_", 20, 2).setupPlayback(PLAYER_FRAME_TIME, true),
         replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-00_", 10, 2).setupPlayback(REWIND_FRAME_TIME, true),
+        replayerDeathFlip = new BLIT.Flip(batch, "mouse-B-dead_", DEATH_FRAMES, 2),
         splatImage = batch.load("splat.png"),
         loopAnims = [
             playerAnim, playerRewind, replayerAnim, replayerRewind
@@ -234,7 +235,7 @@ var AGENT = (function () {
     }
     
     Replayer.prototype.squish = function () {
-        this.deathAnim = playerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
+        this.deathAnim = replayerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
     
     Replayer.prototype.step = function (world) {
@@ -280,7 +281,7 @@ var AGENT = (function () {
     };
     
     Replayer.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
-        doRewind(this, i, j, iDir, unsquishFraction, playerDeathFlip);
+        doRewind(this, i, j, iDir, unsquishFraction, replayerDeathFlip);
     };
 
     Replayer.prototype.isAt = function (i, j) {
