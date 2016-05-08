@@ -707,7 +707,7 @@ var WORLD = (function () {
                 console.log("Error loading puzzle: " + error);
             }
         }
-        if (keyboard.wasAsciiPressed("E")) {
+        if (keyboard.wasAsciiPressed("E") && keyboard.isShiftDown()) {
             if (this.editData !== null) {
                 this.editData = null;
                 editArea.className = "hidden";

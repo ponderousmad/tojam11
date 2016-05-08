@@ -125,16 +125,16 @@ var AGENT = (function () {
             }
             return;
         }
-        if (keyboard.wasKeyPressed(IO.KEYS.Up)) {
+        if (keyboard.wasKeyPressed(IO.KEYS.Up) || keyboard.wasAsciiPressed("W")) {
             this.tryMove(world, 0, -1);
         }
-        else if (keyboard.wasKeyPressed(IO.KEYS.Down)) {
+        else if (keyboard.wasKeyPressed(IO.KEYS.Down) || keyboard.wasAsciiPressed("S")) {
             this.tryMove(world, 0, 1);
         }
-        else if (keyboard.wasKeyPressed(IO.KEYS.Left)) {
+        else if (keyboard.wasKeyPressed(IO.KEYS.Left) || keyboard.wasAsciiPressed("A")) {
             this.tryMove(world, -1, 0);
         }
-        else if (keyboard.wasKeyPressed(IO.KEYS.Right)) {
+        else if (keyboard.wasKeyPressed(IO.KEYS.Right) || keyboard.wasAsciiPressed("D")) {
             this.tryMove(world, 1, 0);
         }
     };
