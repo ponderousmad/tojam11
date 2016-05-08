@@ -30,10 +30,14 @@ var WORLD = (function () {
         UNTICK_TIME = 32,
         UNMOVE_TIME = 64,
         UNSQUISH_TIME = 500,
+        UNRING_TIME = 500,
         REWIND_PAUSE = 250,
         HAND_PIVOT = 48,
         MUSIC_REWIND_FADE_OUT = 500,
         MUSIC_REWIND_FADE_IN = 500,
+        RING_FRAME_TIME = 32,
+        RING_FRAMES = 60,
+        RING_TOTAL = RING_FRAME_TIME * RING_FRAMES,
         batch = new BLIT.Batch("images/"),
         background = batch.load("bg.png"),
         tile2x2 = batch.load("floor-tile.png"),
@@ -46,8 +50,8 @@ var WORLD = (function () {
         crankImageTint = batch.load("crank-left-2.png"),
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
-        exitBlockFlip = new BLIT.Flip(batch, "skull_", 60, 2),
-        alarmFlip = new BLIT.Flip(batch, "alarm-shake_", 60, 2),
+        exitBlockFlip = new BLIT.Flip(batch, "skull_", RING_FRAMES, 2),
+        alarmFlip = new BLIT.Flip(batch, "alarm-shake_", RING_FRAMES, 2),
         alarmImage = batch.load("alarm.png"),
         goat = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
@@ -118,6 +122,10 @@ var WORLD = (function () {
         }
     };
     
+    Trigger.prototype.updating = function () {
+        return this.triggered && this.triggerAnim && this.triggerAnim.fractionComplete < 1;
+    };
+    
     Trigger.prototype.draw = function (context, world, scale) {
         var x = (this.i + 0.5) * world.tileWidth,
             y = (this.j + 0.5) * world.tileHeight;
@@ -136,12 +144,12 @@ var WORLD = (function () {
         }
         if (this.action === TRIGGER_ACTIONS.Exit) {
             if (!this.triggerAnim) {
-                this.triggerAnim = exitBlockFlip.setupPlayback(32, false);
+                this.triggerAnim = exitBlockFlip.setupPlayback(RING_FRAME_TIME, false);
             }
         }
         if (this.action === TRIGGER_ACTIONS.Alarm) {
             if (!this.triggerAnim) {
-                this.triggerAnim = alarmFlip.setupPlayback(32, false);
+                this.triggerAnim = alarmFlip.setupPlayback(RING_FRAME_TIME, false);
             }
         }
         this.triggerAnim.draw(context, x, y, BLIT.ALIGN.Center, this.triggerAnim.width() * scale, this.triggerAnim.height() * scale);
@@ -386,6 +394,20 @@ var WORLD = (function () {
         }
     };
     
+    function Unring(alarm, exits) {
+        this.alarm = alarm;
+        this.exits = exits;
+        this.time = UNRING_TIME;
+    }
+    
+    Unring.prototype.update = function (world, fraction) {
+        var offset = (1 - fraction) * RING_TOTAL;
+        for (var e = 0; e < this.exits.length; ++e) {
+            this.exits[e].triggerAnim = exitBlockFlip.setupPlayback(RING_FRAME_TIME, false, offset);
+        }
+        this.alarm.triggerAnim = alarmFlip.setupPlayback(RING_FRAME_TIME, false, offset);
+    };
+    
     function Rewinder() {
         this.actions = [];
         this.timer = null;
@@ -552,7 +574,7 @@ var WORLD = (function () {
                 }
             }
         }
-        this.player.update(this, this.stepTimer !== null || this.gameOver, sweeping, now, elapsed, keyboard, pointer);
+        this.player.update(this, this.stepTimer !== null || this.triggering() || this.gameOver, sweeping, now, elapsed, keyboard, pointer);
         if (this.player.moves.length >= this.moveLimit && !this.updating()) {
             this.tryRewind();
         }
@@ -567,6 +589,15 @@ var WORLD = (function () {
         } else {
             this.gameOver = true;
         }
+    };
+    
+    World.prototype.triggering = function () {
+        for (var t = 0; t <  this.triggers.length; ++t) {
+            if (this.triggers[t].updating()) {
+                return true;
+            }
+        }
+        return false;
     };
     
     World.prototype.updating = function () {
@@ -586,7 +617,7 @@ var WORLD = (function () {
                 return true;
             }
         }
-        return false;
+        return this.triggering();
     };
     
     World.prototype.pointerLocation = function (pointer) {
@@ -928,14 +959,17 @@ var WORLD = (function () {
         } else if(trigger.action == TRIGGER_ACTIONS.Mousetrap) {
             this.squish(agent);
             this.rewinder.add(new Unsquish([agent]));
-        } else if(trigger.action == TRIGGER_ACTIONS.Alarm) {
+        } else if(trigger.action == TRIGGER_ACTIONS.Alarm && !trigger.triggered) {
             trigger.triggered = true;
+            var exits = [];
             for (var t = 0; t < this.triggers.length; ++t) {
                 var other = this.triggers[t];
                 if (other.action == TRIGGER_ACTIONS.Exit) {
                     other.triggered = true;
+                    exits.push(other);
                 }
             }
+            this.rewinder.add(new Unring(trigger, exits));
         }
     };
     
