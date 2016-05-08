@@ -3,7 +3,7 @@
     "height": 5,
     "startI": 0,
     "startJ": 0,
-    "replayLimit": 3,
+    "replayLimit": 2,
     "moveLimit": 6,
     "triggers": [
         {
