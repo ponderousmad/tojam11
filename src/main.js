@@ -37,7 +37,7 @@ var MAIN = (function (game) {
             requestAnimationFrame(drawFrame);
             
             var now = TICK.now(),
-                elapsed = Math.min(now - lastTime, 32);
+                elapsed = Math.min(now - lastTime, 64);
             pointer.update(elapsed);
             
             if (game) {
