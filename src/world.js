@@ -624,7 +624,7 @@ var WORLD = (function () {
     World.prototype.clickedReset = function (pointer) {
         if (pointer.activated()) {
             var point = this.pointerLocation(pointer);
-            return (point.squareI = this.width - 1) && (point.squareJ = this.height);
+            return (point.squareI == this.width - 1) && (point.squareJ == this.height);
         }
         return false;
     };
