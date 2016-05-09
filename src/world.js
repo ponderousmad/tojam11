@@ -562,7 +562,7 @@ var WORLD = (function () {
 
         if (titleAnim) {
             titleAnim.update(elapsed);
-            if (keyboard.keysDown() > 0) {
+            if (keyboard.keysDown() > 0 || pointer.activated()) {
                 titleAnim = null;
             }
             return true;

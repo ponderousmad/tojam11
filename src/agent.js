@@ -136,6 +136,14 @@ var AGENT = (function () {
         }
         else if (keyboard.wasKeyPressed(IO.KEYS.Right) || keyboard.wasAsciiPressed("D")) {
             this.tryMove(world, 1, 0);
+        } else if(pointer.activated()) {
+            var point = world.pointerLocation(pointer),
+                iDiff = Math.sign(point.squareI - this.i),
+                jDiff = Math.sign(point.squareJ - this.j);
+                
+            if ((iDiff === 0) !== (jDiff === 0)) {
+                this.tryMove(world, iDiff, jDiff);
+            }
         }
     };
 
