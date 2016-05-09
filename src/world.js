@@ -42,6 +42,7 @@ var WORLD = (function () {
         background = batch.load("bg.png"),
         tile2x2 = batch.load("floor-tile.png"),
         panel = batch.load("panel.png"),
+        resetImage = batch.load("reset.png"),
         handImage = batch.load("clock-hand.png"),
         persistOverlay = batch.load("hand-persist-2.png"),
         persistTint = batch.load("hand-persist-1.png"),
@@ -567,6 +568,10 @@ var WORLD = (function () {
             }
             return true;
         }
+        
+        if (keyboard.wasKeyPressed(IO.KEYS.Space) || this.clickedReset(pointer)) {
+            this.reset();
+        }
 
         if (this.editUpdate(now, elapsed, keyboard, pointer)) {
             return true;
@@ -614,6 +619,14 @@ var WORLD = (function () {
             this.tryRewind();
         }
         return true;
+    };
+    
+    World.prototype.clickedReset = function (pointer) {
+        if (pointer.activated()) {
+            var point = this.pointerLocation(pointer);
+            return (point.squareI = this.width - 1) && (point.squareJ = this.height);
+        }
+        return false;
     };
 
     World.prototype.tryRewind = function () {
@@ -728,8 +741,6 @@ var WORLD = (function () {
             document.execCommand("copy");
             this.checkpoint();
 
-        } else if (keyboard.wasKeyPressed(IO.KEYS.Space)) {
-            this.reset();
         }
         if (this.editData === null) {
             return false;
@@ -935,6 +946,8 @@ var WORLD = (function () {
             shadow = "rgb(0,0,0)";
         BLIT.centeredText(context, moveText, this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
         BLIT.centeredText(context, replayText, 2 * this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
+        
+        BLIT.draw(context, resetImage, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, resetImage.width * scale, resetImage.height * scale);
 
         var goat = this.rewinding ? goatExcited : goatStoic;
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
