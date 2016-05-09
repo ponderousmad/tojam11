@@ -148,7 +148,7 @@ var IO = (function (TICK, BLORT) {
         
         var self = this;
         var handleTouch = function(e) {
-            AUDIO.noteOn();
+            BLORT.noteOn();
             self.touches = e.touches;
             e.preventDefault();
         };
