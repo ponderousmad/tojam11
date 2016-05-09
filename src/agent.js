@@ -1,6 +1,6 @@
 var AGENT = (function () {
     "use strict";
-    
+
     var PLAYER_FRAME_TIME = 32,
         REWIND_FRAME_TIME = 10,
         DEATH_FRAMES = 15,
@@ -19,7 +19,7 @@ var AGENT = (function () {
         ],
         stepSounds = [],
         entropy = ENTROPY.makeRandom();
-    
+
 
     (function () {
         var STEP_SOUNDS = 3;
@@ -29,16 +29,16 @@ var AGENT = (function () {
         }
         batch.commit();
     }());
-    
+
     function canMove(world, player, move) {
         return world.canMove(player, player.i + move.i, player.j + move.j);
     }
-    
+
     function doMove(world, player, move) {
         player.i += move.i;
         player.j += move.j;
     }
-    
+
     function doRewind(player, i, j, iDir, unsquishFraction, deathFlip) {
         player.rewinding = true;
         player.i = i;
@@ -52,7 +52,7 @@ var AGENT = (function () {
             player.deathAnim = null;
         }
     }
-    
+
     function updatePush(world, player) {
         if (player.push !== null) {
             if (!player.push.hand.moving()) {
@@ -64,7 +64,7 @@ var AGENT = (function () {
         }
         return false;
     }
-    
+
     function draw(context, world, anim, x, y, facing, scale) {
         if (!batch.loaded) {
             return;
@@ -73,7 +73,7 @@ var AGENT = (function () {
             height = anim.height();
         anim.draw(context, x, y, BLIT.ALIGN.Center, width * scale, height * scale, facing);
     }
-    
+
     function Player(i, j) {
         this.i = i;
         this.j = j;
@@ -86,7 +86,7 @@ var AGENT = (function () {
         this.deathAnim = null;
         this.winAnim = null;
     }
-    
+
     Player.prototype.update = function (world, waiting, sweeping, now, elapsed, keyboard, pointer) {
         if (this.walk !== null) {
             if (this.walk.update(elapsed)) {
@@ -103,14 +103,14 @@ var AGENT = (function () {
             }
             return;
         }
-        
+
         if (this.winAnim !== null) {
             if (this.winAnim.update(elapsed)) {
                 world.onWin();
             }
             return;
         }
-        
+
         if (this.moveTimer) {
             this.moveTimer -= elapsed;
             if (this.moveTimer < 0) {
@@ -138,15 +138,15 @@ var AGENT = (function () {
             this.tryMove(world, 1, 0);
         }
     };
-    
+
     Player.prototype.squish = function () {
         this.deathAnim = playerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
-    
+
     Player.prototype.win = function () {
         this.winAnim = playerWinFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
-    
+
     Player.prototype.updating = function () {
         if (this.deathAnim !== null) {
             return true;
@@ -170,10 +170,10 @@ var AGENT = (function () {
             this.facing = iStep < 0 ? BLIT.MIRROR.Horizontal : BLIT.MIRROR.None;
         }
         this.walk = playerWalkFlip.setupPlayback(PLAYER_FRAME_TIME, false);
-        
+
         entropy.randomElement(stepSounds).play();
     };
-    
+
     Player.prototype.sweep = function(push) {
         this.push = push;
     };
@@ -181,18 +181,18 @@ var AGENT = (function () {
     Player.prototype.isAt = function (i, j) {
         return this.i == i && this.j == j;
     };
-    
+
     Player.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
         doRewind(this, i, j, iDir, unsquishFraction, playerDeathFlip);
     };
-    
+
     Player.prototype.draw = function (context, world, imageScale) {
         var x = (this.i + 0.5) * world.tileWidth,
             y = (this.j + 0.5) * world.tileHeight,
             anim = null,
             move = null,
             moveFraction = 0;
-        
+
         if (this.deathAnim !== null) {
             anim = this.deathAnim;
         } else if (this.winAnim !== null) {
@@ -206,7 +206,7 @@ var AGENT = (function () {
                 move = this.push.move;
             } else if (this.moveTimer !== null) {
                 moveFraction = 1 - this.moveTimer / world.stepDelay;
-                move = this.moves[this.moves.length-1];   
+                move = this.moves[this.moves.length-1];
             }
 
             if (move !== null) {
@@ -217,10 +217,10 @@ var AGENT = (function () {
                 y += moveFraction * move.j * world.tileHeight;
             }
         }
-        
+
         draw(context, world, anim, x, y, this.facing, imageScale);
     };
-    
+
     function Replayer(i, j, moves) {
         this.i = i;
         this.j = j;
@@ -233,16 +233,16 @@ var AGENT = (function () {
         this.rewinding = false;
         this.deathAnim = null;
     }
-    
+
     Replayer.prototype.squish = function () {
         this.deathAnim = replayerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
-    
+
     Replayer.prototype.step = function (world) {
         if (this.moveIndex >= this.moves.length) {
             return;
         }
-        
+
         var move = this.moves[this.moveIndex],
             relocated = false;
         if (move.i !== 0) {
@@ -255,21 +255,21 @@ var AGENT = (function () {
         world.moved(this, move, relocated, false);
         this.moveIndex += 1;
     };
-    
+
     Replayer.prototype.update = function (world, now, elapsed) {
         if (this.deathAnim !== null) {
             this.deathAnim.update(elapsed);
         }
         updatePush(world, this);
     };
-    
+
     Replayer.prototype.updating = function () {
         if (this.push !== null) {
             return true;
         }
         return false;
     };
-    
+
     Replayer.prototype.rewind = function () {
         this.moveIndex = 0;
         this.i = this.startI;
@@ -279,7 +279,7 @@ var AGENT = (function () {
         this.facing = BLIT.MIRROR.None;
         this.deathAnim = null;
     };
-    
+
     Replayer.prototype.rewindTo = function (i, j, iDir, unsquishFraction) {
         doRewind(this, i, j, iDir, unsquishFraction, replayerDeathFlip);
     };
@@ -287,11 +287,11 @@ var AGENT = (function () {
     Replayer.prototype.isAt = function (i, j) {
         return this.i == i && this.j == j;
     };
-    
+
     Replayer.prototype.sweep = function (push) {
         this.push = push;
     };
-    
+
     Replayer.prototype.draw = function (context, world, imageScale, moveFraction) {
         var x = (this.i + 0.5) * world.tileWidth,
             y = (this.j + 0.5) * world.tileHeight,
@@ -328,7 +328,7 @@ var AGENT = (function () {
         }
         draw(context, world, anim, x, y, this.facing, imageScale);
     };
-    
+
     return {
         Player: Player,
         Replayer: Replayer,

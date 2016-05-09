@@ -1,6 +1,6 @@
 var WORLD = (function () {
     "use strict";
-    
+
     var TILE_WIDTH = 80,
         TILE_HEIGHT = 80,
         DIRECTIONS = {
@@ -77,7 +77,7 @@ var WORLD = (function () {
         ],
         puzzleIndex = 0,
         editArea = null;
-        
+
     (function () {
         batch.commit();
         var TRACKS = 2, DEATHS = 2;
@@ -94,11 +94,11 @@ var WORLD = (function () {
             deathSounds.push(noise);
         }
     }());
-    
+
     function screamInPain() {
         entropy.randomElement(deathSounds).play();
     }
-    
+
     function actionName(action) {
         for (var a in TRIGGER_ACTIONS) {
             if (TRIGGER_ACTIONS.hasOwnProperty(a) && TRIGGER_ACTIONS[a] == action) {
@@ -107,7 +107,7 @@ var WORLD = (function () {
         }
         return null;
     }
-    
+
     function canonicalAngle(angle) {
         var qTurns = Math.round(angle / QTURN);
         if (qTurns < 0) {
@@ -115,7 +115,7 @@ var WORLD = (function () {
         }
         return (qTurns % 4) * QTURN;
     }
-    
+
     function fixTint(tint) {
         if (parseInt(tint, 10) === tint) {
             return tint % TINTS.length;
@@ -133,26 +133,26 @@ var WORLD = (function () {
         this.triggered = false;
         this.triggerAnim = null;
     }
-    
+
     Trigger.prototype.rewind = function () {
         this.triggered = false;
         this.triggerAnim = null;
     };
-    
+
     Trigger.prototype.contains = function (entity) {
         return entity.i == this.i && entity.j == this.j;
     };
-    
+
     Trigger.prototype.update = function (world, elapsed, now) {
         if (this.triggerAnim && this.triggered) {
             this.triggerAnim.update(elapsed);
         }
     };
-    
+
     Trigger.prototype.updating = function () {
         return this.triggered && this.triggerAnim && this.triggerAnim.fractionComplete < 1;
     };
-    
+
     Trigger.prototype.draw = function (context, world, scale) {
         var x = (this.i + 0.5) * world.tileWidth,
             y = (this.j + 0.5) * world.tileHeight;
@@ -181,11 +181,11 @@ var WORLD = (function () {
         }
         this.triggerAnim.draw(context, x, y, BLIT.ALIGN.Center, this.triggerAnim.width() * scale, this.triggerAnim.height() * scale);
     };
-    
+
     Trigger.prototype.blocks = function () {
         return this.action == TRIGGER_ACTIONS.Exit && !this.triggered;
     };
-    
+
     Trigger.prototype.save = function () {
         return {
             i: this.i,
@@ -194,7 +194,7 @@ var WORLD = (function () {
             tint: this.tint
         };
     };
-    
+
     function ClockHand(i, j, angle, trigger, persist) {
         this.i = i;
         this.j = j;
@@ -204,13 +204,13 @@ var WORLD = (function () {
         this.persist = persist ? true : false;
         this.tickTimer = null;
     }
-    
+
     ClockHand.prototype.rewind = function () {
         if (!this.persist) {
             this.angle = this.startAngle;
         }
     };
-    
+
     ClockHand.prototype.update = function (now, elapsed) {
         if (this.tickTimer !== null) {
             this.tickTimer -= elapsed;
@@ -221,11 +221,11 @@ var WORLD = (function () {
         }
         return false;
     };
-    
+
     ClockHand.prototype.updating = function () {
         return this.tickTimer !== null;
     };
-    
+
     ClockHand.prototype.draw = function (context, world, editing, imageScale) {
         context.save();
         var x = this.i * world.tileWidth,
@@ -244,11 +244,11 @@ var WORLD = (function () {
             BLIT.draw(context, persistOverlay, -HAND_PIVOT, -HAND_PIVOT, BLIT.ALIGN.TopLeft);
         }
         context.restore();
-        
+
         if (editing && this.trigger) {
             var endX = (this.trigger.i + 0.5) * world.tileWidth,
                 endY = (this.trigger.j + 0.5) * world.tileHeight;
-            
+
             context.save();
             context.strokeStyle = "rgba(0,0,0,.2)";
             context.beginPath();
@@ -258,11 +258,11 @@ var WORLD = (function () {
             context.restore();
         }
     };
-    
+
     ClockHand.prototype.blocks = function (player, newI, newJ) {
         var iDir = Math.round(Math.cos(this.angle)),
             jDir = Math.round(Math.sin(this.angle));
-        
+
         if (iDir === 0) {
             if (player.i === newI) {
                 return false;
@@ -279,7 +279,7 @@ var WORLD = (function () {
             handMinI = iDir < 0 ? this.i - 1 : this.i;
         return handMinI === newI && maxJ === this.j;
     };
-    
+
     ClockHand.prototype.sweepInfo = function () {
         var qDir = Math.round(this.angle / QTURN),
             dir = this.direction(),
@@ -314,7 +314,7 @@ var WORLD = (function () {
                 }
             }
         }
-        
+
         return {
             i: startI, j: startJ,
             newI: startI + sweepI, newJ: startJ + sweepJ,
@@ -323,7 +323,7 @@ var WORLD = (function () {
             direction: dir
         };
     };
-    
+
     ClockHand.prototype.save = function (triggers) {
         var data = {
             i: this.i,
@@ -331,7 +331,7 @@ var WORLD = (function () {
             angle: Math.round(this.startAngle / QTURN),
             persist: this.persist
         };
-        
+
         if (this.trigger) {
             for (var t = 0; t < triggers.length; ++t) {
                 if (triggers[t] == this.trigger) {
@@ -341,32 +341,32 @@ var WORLD = (function () {
         }
         return data;
     };
-    
+
     ClockHand.prototype.turn = function () {
         var sweepInfo = this.sweepInfo();
         this.angle = canonicalAngle(this.angle + QTURN * this.direction());
         this.tickTimer = TICK_TIME;
         return sweepInfo;
     };
-    
+
     ClockHand.prototype.direction = function () {
         if (this.trigger && this.trigger.action == TRIGGER_ACTIONS.Counterclock) {
             return -1;
         }
         return 1;
     };
-    
+
     ClockHand.prototype.moving = function () {
         return this.tickTimer !== null;
     };
-    
+
     ClockHand.prototype.moveFraction = function () {
         if (this.tickTimer !== null) {
             return 1 - (this.tickTimer / TICK_TIME);
         }
         return 1;
     };
-    
+
     function Untick(hand, direction, sweeps) {
         this.hand = hand;
         this.startAngle = hand.angle;
@@ -374,7 +374,7 @@ var WORLD = (function () {
         this.sweeps = sweeps;
         this.time = UNTICK_TIME;
     }
-    
+
     Untick.prototype.update = function (world, fraction) {
         if (!this.hand.persist) {
             this.hand.angle = this.startAngle + this.angleDelta * fraction;
@@ -383,7 +383,7 @@ var WORLD = (function () {
             this.sweeps[s].update(world, fraction);
         }
     };
-    
+
     function Unmove(player, move, relocated) {
         this.player = player;
         this.i = player.i;
@@ -392,7 +392,7 @@ var WORLD = (function () {
         this.relocated = relocated;
         this.time = UNMOVE_TIME;
     }
-    
+
     Unmove.prototype.update = function (world, fraction) {
         if (!this.relocated && fraction > 0.5) {
             fraction = 1 - fraction;
@@ -404,7 +404,7 @@ var WORLD = (function () {
             null
         );
     };
-    
+
     function Unsquish(players) {
         this.squishes = [];
         for (var p = 0; p < players.length; ++p) {
@@ -413,20 +413,20 @@ var WORLD = (function () {
         }
         this.time = UNSQUISH_TIME;
     }
-    
+
     Unsquish.prototype.update = function (world, fraction) {
         for (var s = 0; s < this.squishes.length; ++s) {
             var squish = this.squishes[s];
             squish.player.rewindTo(squish.i, squish.j, 0, 1 - fraction);
         }
     };
-    
+
     function Unring(alarm, exits) {
         this.alarm = alarm;
         this.exits = exits;
         this.time = UNRING_TIME;
     }
-    
+
     Unring.prototype.update = function (world, fraction) {
         var offset = (1 - fraction) * RING_TOTAL;
         for (var e = 0; e < this.exits.length; ++e) {
@@ -434,7 +434,7 @@ var WORLD = (function () {
         }
         this.alarm.triggerAnim = alarmFlip.setupPlayback(RING_FRAME_TIME, false, offset);
     };
-    
+
     function Rewinder() {
         this.actions = [];
         this.timer = null;
@@ -466,11 +466,11 @@ var WORLD = (function () {
         }
         return true;
     };
-    
+
     Rewinder.prototype.add = function (action) {
         this.actions.push(action);
     };
-    
+
     function World(width, height) {
         this.loading = false;
         this.editData = null;
@@ -496,43 +496,43 @@ var WORLD = (function () {
         this.setupPlayer();
         this.musicTimer = null;
     }
-    
+
     World.prototype.reset = function() {
         this.replayers = [];
         this.setupPlayer();
-        
+
         for (var t = 0; t < this.triggers.length; ++t) {
             this.triggers[t].rewind();
         }
-        
+
         for (var h = 0; h < this.hands.length; ++h) {
             var hand = this.hands[h];
             hand.angle = hand.startAngle;
         }
-        
+
         this.stepTimer = null;
         this.stepIndex = 0;
         this.rewinder = new Rewinder();
         this.rewinding = false;
         this.gameOver = false;
     };
-    
+
     World.prototype.fadeMusic = function () {
         this.musicTimer = MUSIC_REWIND_FADE_OUT;
     };
-    
+
     World.prototype.resumeMusic = function () {
         this.musicTimer = MUSIC_REWIND_FADE_OUT;
     };
-    
+
     World.prototype.setupPlayer = function () {
         this.player = new AGENT.Player(this.startJ, this.startI);
     };
-    
+
     World.prototype.totalWidth = function () {
         return this.width * this.tileWidth;
     };
-    
+
     World.prototype.totalHeight = function () {
         return this.height * this.tileHeight;
     };
@@ -541,7 +541,7 @@ var WORLD = (function () {
         if (this.loading) {
             return false;
         }
-        
+
         if (music === null) {
             if (musicTracks[0].isLoaded()) {
                 music = musicTracks[0];
@@ -571,9 +571,9 @@ var WORLD = (function () {
         if (this.editUpdate(now, elapsed, keyboard, pointer)) {
             return true;
         }
-        
+
         AGENT.updateAnims(elapsed);
-        
+
         if (this.rewinding) {
             BLIT.updatePlaybacks(elapsed, [goatExcited, goatStoic]);
             if (!this.rewinder.update(this, now, elapsed)) {
@@ -586,7 +586,7 @@ var WORLD = (function () {
         for (var h = 0; h < this.hands.length; ++h) {
             sweeping |= this.hands[h].update(now, elapsed);
         }
-        
+
         for (var t = 0; t < this.triggers.length; ++t) {
             this.triggers[t].update(this, elapsed, now);
         }
@@ -594,10 +594,10 @@ var WORLD = (function () {
         for (var r = 0; r < this.replayers.length; ++r) {
             sweeping |= this.replayers[r].update(this, now, elapsed);
         }
-        
+
         if (!sweeping && this.stepTimer !== null) {
             this.stepTimer -= elapsed;
-            
+
             if (this.stepTimer < 0) {
                 this.replayers[this.stepIndex].step(this);
                 this.stepIndex += 1;
@@ -615,7 +615,7 @@ var WORLD = (function () {
         }
         return true;
     };
-    
+
     World.prototype.tryRewind = function () {
         if (this.replayers.length < this.replayLimit) {
             this.rewinding = true;
@@ -625,7 +625,7 @@ var WORLD = (function () {
             this.gameOver = true;
         }
     };
-    
+
     World.prototype.triggering = function () {
         for (var t = 0; t <  this.triggers.length; ++t) {
             if (this.triggers[t].updating()) {
@@ -634,7 +634,7 @@ var WORLD = (function () {
         }
         return false;
     };
-    
+
     World.prototype.updating = function () {
         if (this.stepTimer !== null) {
             return true;
@@ -654,14 +654,14 @@ var WORLD = (function () {
         }
         return this.triggering();
     };
-    
+
     World.prototype.pointerLocation = function (pointer) {
         var point = pointer.location();
-        
+
         if (point) {
             var x = (point.x - this.xOffset) / this.tileWidth,
                 y = (point.y - this.yOffset) / this.tileHeight;
-            
+
             return {
                 x: x, y: y,
                 gridI: Math.round(x),
@@ -670,10 +670,10 @@ var WORLD = (function () {
                 squareJ: Math.round(y - 0.5)
             };
         }
-        
+
         return null;
     };
-    
+
     World.prototype.clampPoint = function (point) {
         return {
             x: point.x, y: point.y,
@@ -683,7 +683,7 @@ var WORLD = (function () {
             squareJ: Math.min(point.squareJ, this.height - 1)
         };
     };
-    
+
     World.prototype.checkpoint = function () {
         console.log(this.save());
         try {
@@ -692,7 +692,7 @@ var WORLD = (function () {
             console.log("Error storing puzzle: " + error);
         }
     };
-    
+
     World.prototype.editUpdate = function (now, elapsed, keyboard, pointer) {
         if (editArea === null) {
             editArea = document.getElementById("puzzle");
@@ -700,7 +700,7 @@ var WORLD = (function () {
             editArea.addEventListener("paste", function (event) {
                 setTimeout(function () { self.load(JSON.parse(editArea.value)); });
             }, false);
-            
+
             try {
                 editArea.value = window.localStorage.getItem("puzzle");
             } catch (error) {
@@ -844,14 +844,14 @@ var WORLD = (function () {
         }
         return true;
     };
-    
+
     World.prototype.draw = function (context, width, height) {
         context.font = "12px serif";
         if (this.loading || !batch.loaded) {
             BLIT.centeredText(context, "LOADING", width / 2, height / 2);
             return;
         }
-        
+
         var bgWidth = width,
             bgHeight = (width / background.width) * background.height;
         if ((background.width / background.height) > (width / height)) {
@@ -859,7 +859,7 @@ var WORLD = (function () {
             bgWidth = (height / background.height) * background.width;
         }
         BLIT.draw(context, background, width * 0.5, height * 0.5, BLIT.ALIGN.Center, bgWidth, bgHeight);
-        
+
         if (titleAnim) {
             var titleWidth = width,
                 titleHeight = (width / titleAnim.width()) * titleAnim.height;
@@ -867,16 +867,16 @@ var WORLD = (function () {
                 titleHeight = height;
                 titleWidth = (height / titleAnim.height()) * titleAnim.width();
             }
-            
+
             titleAnim.draw(context, width * 0.5, height * 0.5, BLIT.ALIGN.Center, titleWidth * 0.75, titleHeight * 0.75);
             return;
         }
-        
+
         context.save();
         this.xOffset = Math.floor((width - this.totalWidth()) / 2);
         this.yOffset = Math.floor((height - this.totalHeight()) / 2);
         context.translate(this.xOffset, this.yOffset);
-        
+
         var scale = 2 * this.tileWidth / tile2x2.width;
         for (var i = 0; i < this.width; i += 2) {
             var tileWidth = this.tileWidth,
@@ -898,21 +898,21 @@ var WORLD = (function () {
             }
             context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
         }
-        
+
         for (var row = 0; row < this.height; ++row) {
             for (var h = 0; h < this.hands.length; ++h) {
                 if (this.hands[h].j === row) {
                     this.hands[h].draw(context, this, this.editData !== null, scale);
                 }
             }
-            
+
             for (var t = 0; t < this.triggers.length; ++t) {
                 if (this.triggers[t].j === row) {
                     this.triggers[t].draw(context, this, scale);
                 }
             }
         }
-        
+
         for (row = 0; row < this.height; ++row) {
             for (var r = 0; r < this.replayers.length; ++r) {
                 var replayer = this.replayers[r],
@@ -935,13 +935,13 @@ var WORLD = (function () {
             shadow = "rgb(0,0,0)";
         BLIT.centeredText(context, moveText, this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
         BLIT.centeredText(context, replayText, 2 * this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
-        
+
         var goat = this.rewinding ? goatExcited : goatStoic;
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
-        
+
         context.restore();
     };
-    
+
     World.prototype.canMove = function (player, newI, newJ, skipHand) {
         if (newI < 0) {
             return false;
@@ -955,7 +955,7 @@ var WORLD = (function () {
         if (newJ >= this.height) {
             return false;
         }
-        
+
         for (var h = 0; h < this.hands.length; ++h) {
             var hand = this.hands[h];
             if (skipHand && skipHand == hand) {
@@ -965,17 +965,17 @@ var WORLD = (function () {
                 return false;
             }
         }
-        
+
         for (var t = 0; t < this.triggers.length; ++t) {
             var trigger = this.triggers[t];
             if (trigger.i == newI && trigger.j == newJ && trigger.blocks()) {
                 return false;
             }
         }
-        
+
         return true;
     };
-    
+
     World.prototype.moved = function (agent, move, relocated, playerControlled) {
         if (playerControlled) {
             this.startRestep();
@@ -990,7 +990,7 @@ var WORLD = (function () {
             }
         }
     };
-    
+
     World.prototype.activateTrigger = function (trigger, agent) {
         if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
             crankSound.play();
@@ -1025,7 +1025,7 @@ var WORLD = (function () {
             this.player.win();
         }
     };
-    
+
     World.prototype.sweep = function (push) {
         var sweeps = [],
             squishes = [];
@@ -1038,7 +1038,7 @@ var WORLD = (function () {
                 squishes.push(this.player);
             }
         }
-        
+
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r];
             if (replayer.isAt(push.i, push.j)) {
@@ -1057,30 +1057,30 @@ var WORLD = (function () {
             screamInPain();
         }
     };
-    
+
     World.prototype.squish = function (player) {
         player.squish();
     };
-    
+
     World.prototype.onDeath = function (playerControlled) {
         if (playerControlled) {
             this.tryRewind();
         }
     };
-    
+
     World.prototype.onWin = function () {
         puzzleIndex += 1;
         if (puzzleIndex < puzzles.length) {
             loadWorld(puzzles[puzzleIndex], this);
         }
     };
-    
+
     World.prototype.startRestep = function () {
         if (this.replayers.length > 0) {
             this.stepTimer = this.stepDelay;
         }
     };
-    
+
     World.prototype.rewound = function () {
         for (var r = 0; r < this.replayers.length; ++r) {
             this.replayers[r].rewind();
@@ -1100,7 +1100,7 @@ var WORLD = (function () {
         this.startRestep();
         this.resumeMusic();
     };
-    
+
     World.prototype.save = function () {
         var data = {
             width: this.width,
@@ -1114,7 +1114,7 @@ var WORLD = (function () {
         };
         return JSON.stringify(data, null, 4);
     };
-    
+
     World.prototype.saveTriggers = function () {
         var data = [];
         for (var t = 0; t < this.triggers.length; ++t) {
@@ -1122,7 +1122,7 @@ var WORLD = (function () {
         }
         return data;
     };
-    
+
     World.prototype.saveHands = function () {
         var data = [];
         for (var h = 0; h < this.hands.length; ++h) {
@@ -1130,7 +1130,7 @@ var WORLD = (function () {
         }
         return data;
     };
-    
+
     World.prototype.load = function (data) {
         this.width = data.width;
         this.height = data.height;
@@ -1141,28 +1141,28 @@ var WORLD = (function () {
         this.triggers = [];
         this.hands = [];
         this.replayers = [];
-        
+
         for (var t = 0; t < data.triggers.length; ++t) {
             var tData = data.triggers[t];
             this.triggers.push(new Trigger(tData.i, tData.j, TRIGGER_ACTIONS[tData.action], tData.tint));
         }
-        
+
         for (var h = 0; h < data.hands.length; ++h) {
             var handData = data.hands[h],
                 i = handData.trigger,
                 trigger = (i == parseInt(i, 10)) ? this.triggers[i] : null;
             this.hands.push(new ClockHand(handData.i, handData.j, handData.angle * QTURN, trigger, handData.persist));
         }
-        
+
         this.setupPlayer();
         this.loading = false;
     };
-    
+
     function loadWorld(resource, world) {
         if (!world) {
             world = new World(10, 10);
         }
-        
+
         var request = new XMLHttpRequest();
         request.open("GET", resource, true);
         request.responseType = "text";
@@ -1176,11 +1176,11 @@ var WORLD = (function () {
 
         return world;
     }
-    
+
     function start() {
         return loadWorld(puzzles[puzzleIndex]);
     }
-    
+
     return {
         World: World,
         start: start
