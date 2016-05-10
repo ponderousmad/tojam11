@@ -922,8 +922,8 @@ var WORLD = (function () {
             context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
         }
         
-        var minRow = this.height,
-            maxRow = 0;
+        var minRow = 0,
+            maxRow = this.height;
             
         for (var i = 0; i < this.hands.length; ++i) {
             minRow = Math.min(minRow, this.hands[i].j);
