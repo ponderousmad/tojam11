@@ -91,24 +91,6 @@
             "persist": false
         },
         {
-            "i": 5,
-            "j": 5,
-            "angle": 2,
-            "persist": false
-        },
-        {
-            "i": 1,
-            "j": 5,
-            "angle": 3,
-            "persist": false
-        },
-        {
-            "i": -6,
-            "j": 5,
-            "angle": 1,
-            "persist": false
-        },
-        {
             "i": 1,
             "j": 1,
             "angle": 0,

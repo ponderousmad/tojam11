@@ -23,18 +23,6 @@
             "j": 2,
             "action": "Counterclock",
             "tint": 2
-        },
-        {
-            "i": 2,
-            "j": -1,
-            "action": "Clockwise",
-            "tint": 3
-        },
-        {
-            "i": 3,
-            "j": -1,
-            "action": "Clockwise",
-            "tint": 4
         }
     ],
     "hands": [
@@ -61,13 +49,6 @@
             "j": 3,
             "angle": 0,
             "persist": false
-        },
-        {
-            "i": 1,
-            "j": 4,
-            "angle": 3,
-            "persist": false,
-            "trigger": 2
         },
         {
             "i": 3,
