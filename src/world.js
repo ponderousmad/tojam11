@@ -1079,7 +1079,7 @@ var WORLD = (function () {
 
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r];
-            if (replayer.isAt(push.i, push.j)) {
+            if (replayer.isAt(push.i, push.j) && !replayer.squished()) {
                 if (this.canMove(replayer, push.newI, push.newJ, push.hand)) {
                     replayer.sweep(push);
                     sweeps.push(new Unmove(replayer, push.move, true));

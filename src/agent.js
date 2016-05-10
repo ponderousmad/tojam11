@@ -111,7 +111,7 @@ var AGENT = (function () {
             return;
         }
 
-        if (this.moveTimer) {
+        if (this.moveTimer !== null) {
             this.moveTimer -= elapsed;
             if (this.moveTimer < 0) {
                 this.moveTimer = null;
@@ -172,6 +172,9 @@ var AGENT = (function () {
     };
 
     Player.prototype.tryMove = function (world, iStep, jStep) {
+        if (this.moveTimer !== null) {
+            console.log("Re-MOVE!");
+        }
         this.moves.push({i:iStep, j:jStep});
         this.moveTimer = world.stepDelay;
         if (iStep !== 0) {
@@ -245,9 +248,13 @@ var AGENT = (function () {
     Replayer.prototype.squish = function () {
         this.deathAnim = replayerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
+    
+    Replayer.prototype.squished = function () {
+        return this.deathAnim !== null;
+    };
 
     Replayer.prototype.step = function (world) {
-        if (this.moveIndex >= this.moves.length) {
+        if (this.moveIndex >= this.moves.length || this.squished()) {
             return;
         }
 
