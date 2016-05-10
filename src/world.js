@@ -256,6 +256,18 @@ var WORLD = (function () {
             context.moveTo(x, y);
             context.lineTo(endX, endY);
             context.stroke();
+            
+            var sweep = this.sweepInfo(),
+                xOffset = world.tileHeight * 0.5,
+                yOffset = world.tileHeight * 0.5;
+                
+            context.strokeStyle = "rgb(255,0,0)";
+            context.beginPath();
+            context.moveTo(sweep.i * world.tileWidth + xOffset, sweep.j * world.tileHeight + yOffset);
+            context.lineTo(sweep.newI * world.tileWidth + xOffset, sweep.newJ * world.tileWidth + yOffset);
+            context.stroke();
+            context.fillStyle = "rgb(255,0,0)";
+            context.fillRect(sweep.newI * world.tileWidth + xOffset - 4, sweep.newJ * world.tileHeight + yOffset - 4, 8, 8);
             context.restore();
         }
     };
@@ -282,7 +294,7 @@ var WORLD = (function () {
     };
 
     ClockHand.prototype.sweepInfo = function () {
-        var qDir = Math.round(this.angle / QTURN),
+        var qDir = Math.round(canonicalAngle(this.angle) / QTURN),
             dir = this.direction(),
             startI = this.i,
             startJ = this.j,
@@ -909,8 +921,21 @@ var WORLD = (function () {
             }
             context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
         }
+        
+        var minRow = this.height,
+            maxRow = 0;
+            
+        for (var i = 0; i < this.hands.length; ++i) {
+            minRow = Math.min(minRow, this.hands[i].j);
+            maxRow = Math.max(maxRow, this.hands[i].j);
+        }
+        
+        for (i = 0; i < this.triggers.length; ++i) {
+            minRow = Math.min(minRow, this.triggers[i].j);
+            maxRow = Math.max(maxRow, this.triggers[i].j);
+        }
 
-        for (var row = 0; row < this.height; ++row) {
+        for (var row = minRow; row <= maxRow; ++row) {
             for (var h = 0; h < this.hands.length; ++h) {
                 if (this.hands[h].j === row) {
                     this.hands[h].draw(context, this, this.editData !== null, scale);
@@ -924,7 +949,7 @@ var WORLD = (function () {
             }
         }
 
-        for (row = 0; row < this.height; ++row) {
+        for (row = minRow; row <= maxRow; ++row) {
             for (var r = 0; r < this.replayers.length; ++r) {
                 var replayer = this.replayers[r],
                     stepFraction = null;
