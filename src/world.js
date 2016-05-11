@@ -42,6 +42,8 @@ var WORLD = (function () {
         background = batch.load("bg.png"),
         tile2x2 = batch.load("floor-tile.png"),
         panel = batch.load("panel.png"),
+        movePanel = batch.load("moves-box.png"),
+        rewindPanel = batch.load("rewinds-box.png"),
         resetImage = batch.load("reset.png"),
         handImage = batch.load("clock-hand.png"),
         persistOverlay = batch.load("hand-persist-2.png"),
@@ -891,20 +893,24 @@ var WORLD = (function () {
     };
 
     World.prototype.draw = function (context, width, height) {
-        context.font = "12px serif";
+        if (background.complete) {
+            var bgWidth = width,
+                bgHeight = (width / background.width) * background.height;
+            if ((background.width / background.height) > (width / height)) {
+                bgHeight = height;
+                bgWidth = (height / background.height) * background.width;
+            }
+            BLIT.draw(context, background, width * 0.5, height * 0.5, BLIT.ALIGN.Center, bgWidth, bgHeight);
+        }
+
         if (this.loading || !batch.loaded) {
-            BLIT.centeredText(context, "LOADING", width / 2, height / 2);
+            context.save();
+            context.font = "30px sans-serif";
+            BLIT.centeredText(context, "LOADING", width / 2, height / 2, "rgb(128,0,128)", "rgb(255,0,255)", 1);
+            context.restore();
             return;
         }
-
-        var bgWidth = width,
-            bgHeight = (width / background.width) * background.height;
-        if ((background.width / background.height) > (width / height)) {
-            bgHeight = height;
-            bgWidth = (height / background.height) * background.width;
-        }
-        BLIT.draw(context, background, width * 0.5, height * 0.5, BLIT.ALIGN.Center, bgWidth, bgHeight);
-
+        
         if (titleAnim) {
             var titleWidth = width,
                 titleHeight = (width / titleAnim.width()) * titleAnim.height();
@@ -963,15 +969,15 @@ var WORLD = (function () {
                     this.hands[h].draw(context, this, this.editData !== null, scale);
                 }
             }
+        }
 
+        for (row = minRow; row <= maxRow; ++row) {
             for (var t = 0; t < this.triggers.length; ++t) {
                 if (this.triggers[t].j === row) {
                     this.triggers[t].draw(context, this, scale);
                 }
             }
-        }
-
-        for (row = minRow; row <= maxRow; ++row) {
+            
             for (var r = 0; r < this.replayers.length; ++r) {
                 var replayer = this.replayers[r],
                     stepFraction = null;
@@ -987,12 +993,19 @@ var WORLD = (function () {
                 this.player.draw(context, this, scale);
             }
         }
-        var moveText = "Moves: " + (this.moveLimit - this.player.moves.length) + " / " + this.moveLimit,
-            replayText = "Rewinds: " + (this.replayLimit - this.replayers.length) + " / " + this.replayLimit,
-            fill = "rgb(255,255,255)",
-            shadow = "rgb(0,0,0)";
-        BLIT.centeredText(context, moveText, this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
-        BLIT.centeredText(context, replayText, 2 * this.tileWidth, this.totalHeight() + this.tileHeight * 0.5, fill, shadow, 1);
+        var moveText = this.player.moves.length + " of " + this.moveLimit,
+            replayText = this.replayers.length + " of " + this.replayLimit,
+            shadow = "rgb(0,0,0)",
+            uiScale = 1.25 * scale,
+            uiY = this.totalHeight() + this.tileHeight * 0.5 - 2;
+        context.font = "14px sans-serif";
+        BLIT.draw(context, movePanel, this.tileWidth, uiY, BLIT.ALIGN.Center, movePanel.width * uiScale, movePanel.height * uiScale);
+        BLIT.draw(context, rewindPanel, 2.25 * this.tileWidth, uiY, BLIT.ALIGN.Center, rewindPanel.width * uiScale, rewindPanel.height * uiScale);
+        BLIT.centeredText(context, moveText, this.tileWidth, uiY + 6, "rgb(255,0,0)", shadow, 1);
+        BLIT.centeredText(context, replayText, 2.25 * this.tileWidth, uiY + 6, "rgb(255,255,0)", shadow, 1);
+        
+        context.font = "24px sans-serif";
+        BLIT.centeredText(context, "LEVEL " + (puzzleIndex + 1), this.width * 0.5 * this.tileWidth, -this.tileHeight * 0.75, "rgb(196,0,196)", shadow, 2);
         
         BLIT.draw(context, resetImage, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, resetImage.width * scale, resetImage.height * scale);
 
