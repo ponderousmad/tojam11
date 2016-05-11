@@ -44,6 +44,7 @@ var WORLD = (function () {
         panel = batch.load("panel.png"),
         movePanel = batch.load("moves-box.png"),
         rewindPanel = batch.load("rewinds-box.png"),
+        textBubble = batch.load("text-bubble.png"),
         resetImage = batch.load("reset.png"),
         handImage = batch.load("clock-hand.png"),
         persistOverlay = batch.load("hand-persist-2.png"),
@@ -532,6 +533,7 @@ var WORLD = (function () {
         this.gameOver = false;
         this.setupPlayer();
         this.musicTimer = null;
+        this.tutorial = ["TAP, CLICK, WASD", "or arrow keys to move."];
     }
 
     World.prototype.reset = function() {
@@ -604,7 +606,7 @@ var WORLD = (function () {
             }
             return true;
         }
-        
+       
         if (keyboard.wasKeyPressed(IO.KEYS.Space) || this.clickedReset(pointer)) {
             this.reset();
         }
@@ -614,6 +616,13 @@ var WORLD = (function () {
         }
 
         AGENT.updateAnims(elapsed);
+        
+        if (this.tutorial) {
+            if (keyboard.keysDown() > 0 || pointer.activated()) {
+                this.tutorial = null;
+            }
+            return;
+        }
 
         if (this.rewinding) {
             BLIT.updatePlaybacks(elapsed, [goatExcited, goatStoic]);
@@ -1011,7 +1020,18 @@ var WORLD = (function () {
 
         var goat = this.rewinding ? goatExcited : goatStoic;
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
-
+        
+        if (this.tutorial) {
+            BLIT.draw(context, textBubble, 0, this.totalHeight() * 0.5, BLIT.ALIGN.Left | BLIT.ALIGN.Center);
+            context.font = "20px sans-serif";
+            var TEXT_HEIGHT = 40,
+                yOffset = -(this.tutorial.length - 1) * TEXT_HEIGHT * 0.5;
+            for (var line = 0; line < this.tutorial.length; ++line) {
+                BLIT.centeredText(context, this.tutorial[line], 270, this.totalHeight() * 0.5 + yOffset, "black");
+                yOffset += TEXT_HEIGHT;
+            }
+        }
+        
         context.restore();
     };
 
