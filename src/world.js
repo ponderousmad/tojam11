@@ -35,7 +35,8 @@ var WORLD = (function () {
         HAND_PIVOT = 48,
         MUSIC_REWIND_FADE_OUT = 500,
         MUSIC_REWIND_FADE_IN = 500,
-        RING_FRAME_TIME = 32,
+        DEFAULT_FRAME_TIME = 32,
+        RING_FRAME_TIME = DEFAULT_FRAME_TIME,
         RING_FRAMES = 60,
         RING_TOTAL = RING_FRAME_TIME * RING_FRAMES,
         batch = new BLIT.Batch("images/"),
@@ -45,7 +46,6 @@ var WORLD = (function () {
         movePanel = batch.load("moves-box.png"),
         rewindPanel = batch.load("rewinds-box.png"),
         textBubble = batch.load("text-bubble.png"),
-        resetImage = batch.load("reset.png"),
         handImage = batch.load("clock-hand.png"),
         persistOverlay = batch.load("hand-persist-2.png"),
         persistTint = batch.load("hand-persist-1.png"),
@@ -54,12 +54,14 @@ var WORLD = (function () {
         crankImageTint = batch.load("crank-left-2.png"),
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
+        alarmImage = batch.load("alarm.png"),
         exitBlockFlip = new BLIT.Flip(batch, "skull_", RING_FRAMES, 2),
         alarmFlip = new BLIT.Flip(batch, "alarm-shake_", RING_FRAMES, 2),
-        titleAnim = new BLIT.Flip(batch, "title_", 12, 2).setupPlayback(32, true),
-        alarmImage = batch.load("alarm.png"),
-        goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(32, true),
-        goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(32, true),
+        resetFlip = new BLIT.Flip(batch, "reset_", 18, 2),
+        resetAnim = resetFlip.setupPlayback(DEFAULT_FRAME_TIME, false, 0),
+        titleAnim = new BLIT.Flip(batch, "title_", 12, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
+        goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
+        goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01.wav"),
         crankRevSound = new BLORT.Noise("sounds/crankREV.wav"),
@@ -530,6 +532,7 @@ var WORLD = (function () {
         this.hands = [];
         this.rewinder = new Rewinder();
         this.rewinding = false;
+        this.resettingAnim = null;
         this.gameOver = false;
         this.setupPlayer();
         this.musicTimer = null;
@@ -608,7 +611,11 @@ var WORLD = (function () {
         }
        
         if (keyboard.wasKeyPressed(IO.KEYS.Space) || this.clickedReset(pointer)) {
-            this.reset();
+            if (this.editData !== null) {
+                this.reset();
+            } else {
+                this.resettingAnim = resetFlip.setupPlayback(DEFAULT_FRAME_TIME, false);
+            }
         }
 
         if (this.editUpdate(now, elapsed, keyboard, pointer)) {
@@ -630,6 +637,13 @@ var WORLD = (function () {
                 this.rewound();
             }
             return;
+        }
+        
+        if (this.resettingAnim !== null) {
+            if (this.resettingAnim.update(elapsed)) {
+                this.resettingAnim = null;
+                this.reset();
+            }
         }
 
         var sweeping = false;
@@ -1016,7 +1030,8 @@ var WORLD = (function () {
         context.font = "24px sans-serif";
         BLIT.centeredText(context, "LEVEL " + (puzzleIndex + 1), this.width * 0.5 * this.tileWidth, -this.tileHeight * 0.75, "rgb(196,0,196)", shadow, 2);
         
-        BLIT.draw(context, resetImage, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, resetImage.width * scale, resetImage.height * scale);
+        var reset = this.resettingAnim !== null ? this.resettingAnim : resetAnim;
+        reset.draw(context, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, reset.width() * scale, reset.height() * scale);
 
         var goat = this.rewinding ? goatExcited : goatStoic;
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
