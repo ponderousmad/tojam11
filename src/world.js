@@ -907,13 +907,13 @@ var WORLD = (function () {
 
         if (titleAnim) {
             var titleWidth = width,
-                titleHeight = (width / titleAnim.width()) * titleAnim.height;
-            if ((titleAnim.width() / titleAnim.height()) > (width / height)) {
+                titleHeight = (width / titleAnim.width()) * titleAnim.height();
+            if ((titleAnim.width() / titleAnim.height()) < (width / height)) {
                 titleHeight = height;
                 titleWidth = (height / titleAnim.height()) * titleAnim.width();
             }
 
-            titleAnim.draw(context, width * 0.5, height * 0.5, BLIT.ALIGN.Center, titleWidth * 0.75, titleHeight * 0.75);
+            titleAnim.draw(context, width * 0.5, height * 0.5, BLIT.ALIGN.Center, titleWidth, titleHeight);
             return;
         }
 
