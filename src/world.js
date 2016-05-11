@@ -59,8 +59,11 @@ var WORLD = (function () {
         goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(32, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01.wav"),
+        crankRevSound = new BLORT.Noise("sounds/crankREV.wav"),
         tickSound = new BLORT.Noise("sounds/clockturn01.wav"),
+        tickRevSound = new BLORT.Noise("sounds/clockturnREV.wav"),
         alarmSound = new BLORT.Noise("sounds/alarm.wav"),
+        victorySound = new BLORT.Noise("sounds/victory.wav"),
         deathSounds = [],
         musicTracks = [],
         music = null,
@@ -387,6 +390,11 @@ var WORLD = (function () {
         this.sweeps = sweeps;
         this.time = UNTICK_TIME;
     }
+    
+    Untick.prototype.start = function () {
+        crankRevSound.play();
+        tickRevSound.play();
+    };
 
     Untick.prototype.update = function (world, fraction) {
         if (!this.hand.persist) {
@@ -405,6 +413,9 @@ var WORLD = (function () {
         this.relocated = relocated;
         this.time = UNMOVE_TIME;
     }
+    
+    Unmove.prototype.start = function () {
+    };
 
     Unmove.prototype.update = function (world, fraction) {
         if (!this.relocated && fraction > 0.5) {
@@ -426,6 +437,9 @@ var WORLD = (function () {
         }
         this.time = UNSQUISH_TIME;
     }
+    
+    Unsquish.prototype.start = function () {
+    };
 
     Unsquish.prototype.update = function (world, fraction) {
         for (var s = 0; s < this.squishes.length; ++s) {
@@ -439,6 +453,9 @@ var WORLD = (function () {
         this.exits = exits;
         this.time = UNRING_TIME;
     }
+    
+    Unring.prototype.start = function () {
+    };
 
     Unring.prototype.update = function (world, fraction) {
         var offset = (1 - fraction) * RING_TOTAL;
@@ -451,6 +468,7 @@ var WORLD = (function () {
     function Rewinder() {
         this.actions = [];
         this.timer = null;
+        this.startedAction = null;
     }
 
     Rewinder.prototype.update = function (world, now, elapsed) {
@@ -468,6 +486,10 @@ var WORLD = (function () {
             this.timer -= elapsed;
         }
         var fraction = this.timer < 0 ? 1.0 : 1.0 - (this.timer / lastAction.time);
+        if (lastAction != this.startedAction) {
+            lastAction.start();
+            this.startedAction = lastAction;
+        }
         lastAction.update(world, fraction);
         if (this.timer < 0) {
             this.actions.pop();
@@ -1060,6 +1082,7 @@ var WORLD = (function () {
             alarmSound.play();
             this.rewinder.add(new Unring(trigger, exits));
         } else if(trigger.action == TRIGGER_ACTIONS.Exit) {
+            victorySound.play();
             this.player.win();
         }
     };
