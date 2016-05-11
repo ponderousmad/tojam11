@@ -962,7 +962,7 @@ var WORLD = (function () {
         var minRow = 0,
             maxRow = this.height;
             
-        for (var i = 0; i < this.hands.length; ++i) {
+        for (i = 0; i < this.hands.length; ++i) {
             minRow = Math.min(minRow, this.hands[i].j);
             maxRow = Math.max(maxRow, this.hands[i].j);
         }
