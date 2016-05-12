@@ -218,12 +218,12 @@ var AGENT = (function () {
             } else if (this.moveTimer !== null) {
                 moveFraction = 1 - this.moveTimer / world.stepDelay;
                 move = this.moves[this.moves.length-1];
-            }
-
-            if (move !== null) {
                 if (moveFraction > 0.5 && !canMove(world, this, move)) {
                     moveFraction = 1 - moveFraction;
                 }
+            }
+
+            if (move !== null) {
                 x += moveFraction * move.i * world.tileWidth;
                 y += moveFraction * move.j * world.tileHeight;
             }

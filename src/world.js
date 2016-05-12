@@ -26,7 +26,7 @@ var WORLD = (function () {
             COUNT: 5
         },
         QTURN = Math.PI / 2,
-        TICK_TIME = 64,
+        TICK_TIME = 400,
         UNTICK_TIME = 32,
         UNMOVE_TIME = 64,
         UNSQUISH_TIME = 500,
@@ -72,7 +72,7 @@ var WORLD = (function () {
         crankSound = new BLORT.Noise("sounds/crank01B.wav"),
         crankRevSound = new BLORT.Noise("sounds/crankREVB.wav"),
         tickSound = new BLORT.Noise("sounds/clockturn01B.wav"),
-        tickRevSound = new BLORT.Noise("sounds/clockturnREVB.wav"),
+        tickRevSound = new BLORT.Noise("sounds/clockturn01REVB.wav"),
         alarmSound = new BLORT.Noise("sounds/alarm.wav"),
         victorySound = new BLORT.Noise("sounds/victory.wav"),
         deathSounds = [],
@@ -91,9 +91,17 @@ var WORLD = (function () {
             "puzzles/puzzle8.json"
         ],
         clockTween = [
-            (0,0),
-            (10,2),
-            
+            [0.0, 0.00],
+            [0.1, 0.05],
+            [0.2, 0.02],
+            [0.3, 0.08],
+            [0.4, 0.15],
+            [0.5, 0.30],
+            [0.6, 0.50],
+            [0.7, 0.75],
+            [0.8, 0.95],
+            [0.9, 1.05],
+            [1.0, 1.00]
         ],
         puzzleIndex = 0,
         editArea = null;
@@ -114,6 +122,21 @@ var WORLD = (function () {
             deathSounds.push(noise);
         }
     }());
+    
+    function interpolate(fraction, curve) {
+        for (var i = 1; i < curve.length; ++i) {
+            var before = curve[i-1],
+                after = curve[i];
+            
+            if ((i == 1 || before[0] <= fraction) && fraction <= after[0]) {
+                fraction = Math.max(0, fraction - before[0]);
+                var range = after[0] - before[0];
+                fraction = fraction / range;
+                return after[1] * fraction + (1 - fraction) * before[1];
+            }
+        }
+        return curve[curve.length - 1][1];
+    }
 
     function screamInPain() {
         entropy.randomElement(deathSounds).play();
@@ -252,7 +275,7 @@ var WORLD = (function () {
             y = this.j * world.tileHeight,
             angle = this.angle;
         if (this.tickTimer !== null) {
-            angle -= QTURN * (this.tickTimer / TICK_TIME) * this.direction();
+            angle -= QTURN * interpolate(this.tickTimer / TICK_TIME, clockTween) * this.direction();
         }
         context.translate(x, y);
         context.rotate(angle);
