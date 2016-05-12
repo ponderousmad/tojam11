@@ -55,6 +55,12 @@ var WORLD = (function () {
         trapImage = batch.load("trap.png"),
         trapCheese = batch.load("trap-cheese.png"),
         alarmImage = batch.load("alarm.png"),
+        DECORATIONS = [
+            batch.load("bits.png"),
+            batch.load("clockface.png"),
+            batch.load("variant-tile.png"),
+            batch.load("variant-tile2.png")
+        ],
         exitBlockFlip = new BLIT.Flip(batch, "skull_", RING_FRAMES, 2),
         alarmFlip = new BLIT.Flip(batch, "alarm-shake_", RING_FRAMES, 2),
         resetFlip = new BLIT.Flip(batch, "reset_", 18, 2),
@@ -387,6 +393,25 @@ var WORLD = (function () {
         }
         return 1;
     };
+    
+    function Decoration(i, j, deco) {
+        this.i = i;
+        this.j = j;
+        this.deco = deco;
+    }
+    
+    Decoration.prototype.draw = function (context, world, scale) {
+        var image = DECORATIONS[this.deco];
+        BLIT.draw(context, image, this.i * world.tileWidth, this.j * world.tileHeight, BLIT.ALIGN.TopLeft, image.width * scale, image.height * scale);
+    };
+    
+    Decoration.prototype.save = function () {
+        return {
+            i: this.i,
+            j: this.j,
+            deco: this.deco
+        };
+    };
 
     function Untick(hand, direction, sweeps) {
         this.hand = hand;
@@ -530,6 +555,7 @@ var WORLD = (function () {
         this.stepDelay = 100;
         this.triggers = [];
         this.hands = [];
+        this.decos = [];
         this.rewinder = new Rewinder();
         this.rewinding = false;
         this.resettingAnim = null;
@@ -789,8 +815,10 @@ var WORLD = (function () {
                 this.editData = {
                     hand: null,
                     trigger: null,
+                    deco: null,
                     lastHand: null,
-                    lastTrigger: null
+                    lastTrigger: null,
+                    lastDeco: null
                 };
                 editArea.className = "";
             }
@@ -820,8 +848,7 @@ var WORLD = (function () {
                 edit.lastHand = edit.hand;
                 edit.hand = null;
             }
-        }
-        else if (edit.trigger) {
+        } else if (edit.trigger) {
             if (pointer.primary) {
                 edit.trigger.i = at.squareI;
                 edit.trigger.j = at.squareJ;
@@ -829,8 +856,15 @@ var WORLD = (function () {
                 edit.lastTrigger = edit.trigger;
                 edit.trigger = null;
             }
-        }
-        else if (pointer.activated()) {
+        } else if (edit.deco) {
+            if (pointer.primary) {
+                edit.deco.i = at.squareI;
+                edit.deco.j = at.squareJ;
+            } else {
+                edit.lastDeco = edit.deco;
+                edit.deco = null;
+            }
+        } else if (pointer.activated()) {
             if (keyboard.isShiftDown()) {
                 for (var t = 0; t < this.triggers.length; ++t) {
                     var trigger = this.triggers[t];
@@ -847,6 +881,21 @@ var WORLD = (function () {
                     edit.lastHand.trigger = edit.trigger;
                 }
                 edit.lastHand = null;
+                edit.lastDeco = null;
+            } else if(keyboard.isAltDown()) {
+                for (var d = 0; d < this.decos.length; ++d) {
+                    var deco = this.decos[d];
+                    if (deco.i == at.squareI && deco.j == at.squareJ) {
+                        edit.deco = deco;
+                    }
+                }
+                if (!edit.deco) {
+                    at = this.clampPoint(at);
+                    edit.deco = new Decoration(at.squareI, at.squareJ, 0);
+                    this.decos.push(edit.deco);
+                }
+                edit.lastHand = null;
+                edit.lastTrigger = null;
             } else {
                 for (var h = 0; h < this.hands.length; ++h) {
                     var hand = this.hands[h];
@@ -866,22 +915,27 @@ var WORLD = (function () {
             } else if (edit.lastTrigger) {
                 this.triggers.splice(this.triggers.indexOf(edit.lastTrigger), 1);
 
-                for (var d = 0; d < this.hands.length; ++d) {
-                    var unhand = this.hands[d];
+                for (var u = 0; u < this.hands.length; ++u) {
+                    var unhand = this.hands[u];
                     if (unhand.trigger == edit.lastTrigger) {
                         unhand.trigger = null;
                     }
                 }
+            } else if (edit.lastDeco) {
+                this.decos.splice(this.decos.indexOf(edit.lastDeco), 1);
             }
 
             edit.lastHand = null;
             edit.lastTrigger = null;
+            edit.lastDeco = null;
         } else if (keyboard.wasAsciiPressed("T")) {
             if (edit.lastHand !== null) {
                 edit.lastHand.persist = !edit.lastHand.persist;
             } else if (edit.lastTrigger !== null) {
                 edit.lastTrigger.action = (edit.lastTrigger.action + 1) % TRIGGER_ACTIONS.COUNT;
                 edit.lastTrigger.triggerAnim = null;
+            } else if (edit.lastDeco !== null) {
+                edit.lastDeco.deco = (edit.lastDeco.deco + 1) % DECORATIONS.length;
             }
         } else if (keyboard.wasAsciiPressed("C")) {
             var colorTrigger = edit.lastTrigger;
@@ -894,6 +948,7 @@ var WORLD = (function () {
         } else if (keyboard.wasKeyPressed(IO.KEYS.Backspace) && keyboard.isShiftDown()) {
             this.hands = [];
             this.triggers = [];
+            this.decos = [];
         } else if (keyboard.wasAsciiPressed("1") && keyboard.isShiftDown()) {
             this.width = Math.max(this.width - 1, 4);
         } else if (keyboard.wasAsciiPressed("1")) {
@@ -976,6 +1031,10 @@ var WORLD = (function () {
                 context.drawImage(tile2x2, 0, 0, sourceX, sourceY, x, y, tileWidth, tileHeight);
             }
             context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
+        }
+        
+        for (var d = 0; d < this.decos.length; ++d) {
+            this.decos[d].draw(context, this, scale);
         }
         
         if (this.resettingAnim !== null) {
@@ -1238,7 +1297,8 @@ var WORLD = (function () {
             replayLimit: this.replayLimit,
             moveLimit: this.moveLimit,
             triggers: this.saveTriggers(),
-            hands: this.saveHands()
+            hands: this.saveHands(),
+            decos: this.saveDecos()
         };
         return JSON.stringify(data, null, 4);
     };
@@ -1259,6 +1319,14 @@ var WORLD = (function () {
         return data;
     };
 
+    World.prototype.saveDecos = function () {
+        var data = [];
+        for (var d = 0; d < this.decos.length; ++d) {
+            data.push(this.decos[d].save());
+        }
+        return data;
+    };
+
     World.prototype.load = function (data) {
         this.width = data.width;
         this.height = data.height;
@@ -1268,6 +1336,7 @@ var WORLD = (function () {
         this.moveLimit = data.moveLimit ? data.moveLimit : 5;
         this.triggers = [];
         this.hands = [];
+        this.decos = [];
         this.replayers = [];
 
         for (var t = 0; t < data.triggers.length; ++t) {
@@ -1280,6 +1349,13 @@ var WORLD = (function () {
                 i = handData.trigger,
                 trigger = (i == parseInt(i, 10)) ? this.triggers[i] : null;
             this.hands.push(new ClockHand(handData.i, handData.j, handData.angle * QTURN, trigger, handData.persist));
+        }
+        
+        if (data.decos) {
+            for (var d = 0; d < data.decos.length; ++d) {
+                var decoData = data.decos[d];
+                this.decos.push(new Decoration(decoData.i, decoData.j, decoData.deco));
+            }
         }
 
         this.setupPlayer();

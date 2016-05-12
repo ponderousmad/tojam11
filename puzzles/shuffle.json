@@ -96,5 +96,12 @@
             "persist": false,
             "trigger": 5
         }
+    ],
+    "decos": [
+        {
+            "i": 0,
+            "j": 3,
+            "deco": 0
+        }
     ]
 }
