@@ -93,14 +93,14 @@ var AGENT = (function () {
                 this.walk = null;
             }
         }
-        if (waiting || sweeping) {
-            updatePush(world, this);
-            return;
-        }
         if (this.deathAnim !== null) {
             if (this.deathAnim.update(elapsed)) {
                 world.onDeath(true);
             }
+            return;
+        }
+        if (waiting || sweeping) {
+            updatePush(world, this);
             return;
         }
 

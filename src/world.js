@@ -450,8 +450,6 @@ var WORLD = (function () {
     }
     
     Untick.prototype.start = function () {
-        crankRevSound.play();
-        tickRevSound.play();
     };
 
     Untick.prototype.update = function (world, fraction) {
@@ -460,6 +458,22 @@ var WORLD = (function () {
         }
         for (var s = 0; s < this.sweeps.length; ++s) {
             this.sweeps[s].update(world, fraction);
+        }
+    };
+    
+    function Unticks(unticks) {
+        this.unticks = unticks;
+        this.time = UNTICK_TIME;
+    }
+    
+    Unticks.prototype.start = function () {
+        crankRevSound.play();
+        tickRevSound.play();
+    };
+    
+    Unticks.prototype.update = function (world, fraction) {
+        for (var u = 0; u < this.unticks.length; ++u) {
+            this.unticks[u].update(world, fraction);
         }
     };
 
@@ -1202,13 +1216,22 @@ var WORLD = (function () {
         if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
             crankSound.play();
             tickSound.play();
-            var pushed = [];
+            var pushed = [],
+                unticks = [],
+                squishes = [];
             for (var h = 0; h < this.hands.length; ++h) {
                 var hand = this.hands[h];
                 if (hand.trigger == trigger) {
                     var push = hand.turn();
-                    this.sweep(push, pushed);
+                    this.sweep(push, pushed, unticks, squishes);
                 }
+            }
+            if (unticks.length > 0) {
+                this.rewinder.add(new Unticks(unticks));
+            }
+            if (squishes.length > 0) {
+                this.rewinder.add(new Unsquish(squishes));
+                screamInPain();
             }
         } else if(trigger.action == TRIGGER_ACTIONS.Mousetrap) {
             if (!trigger.triggered) {
@@ -1254,9 +1277,8 @@ var WORLD = (function () {
         return false;
     }
 
-    World.prototype.sweep = function (push, pushed) {
-        var sweeps = [],
-            squishes = [];
+    World.prototype.sweep = function (push, pushed, unticks, squishes) {
+        var sweeps = [];
         if (this.player.isAt(push.i, push.j) && !inList(pushed, this.player)) {
             pushed.push(this.player);
             if (this.canMove(this.player, push.newI, push.newJ, push.hand)) {
@@ -1281,11 +1303,7 @@ var WORLD = (function () {
                 }
             }
         }
-        this.rewinder.add(new Untick(push.hand, push.direction, sweeps));
-        if (squishes.length > 0) {
-            this.rewinder.add(new Unsquish(squishes));
-            screamInPain();
-        }
+        unticks.push(new Untick(push.hand, push.direction, sweeps));
     };
 
     World.prototype.squish = function (player) {
