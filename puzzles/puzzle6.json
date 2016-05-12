@@ -1,6 +1,6 @@
 {
     "width": 4,
-    "height": 6,
+    "height": 5,
     "startI": 0,
     "startJ": 0,
     "replayLimit": 4,
@@ -85,31 +85,11 @@
             "persist": false
         },
         {
-            "i": 1,
-            "j": 4,
-            "angle": 1,
-            "persist": false
-        },
-        {
             "i": 0,
             "j": 4,
             "angle": 3,
             "persist": false,
             "trigger": 2
-        },
-        {
-            "i": 3,
-            "j": 4,
-            "angle": 3,
-            "persist": false,
-            "trigger": 1
-        },
-        {
-            "i": 3,
-            "j": 3,
-            "angle": 3,
-            "persist": false,
-            "trigger": 1
         },
         {
             "i": 4,
@@ -123,6 +103,13 @@
             "j": 0,
             "angle": 1,
             "persist": false
+        }
+    ],
+    "decos": [
+        {
+            "i": 1,
+            "j": 4,
+            "deco": 0
         }
     ]
 }
