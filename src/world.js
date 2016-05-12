@@ -1287,7 +1287,7 @@ var WORLD = (function () {
         if (!world) {
             world = new World(10, 10);
             var parts = window.location.href.split("load=");
-            if (parts.length > 0) {
+            if (parts.length > 1) {
                 resource = "puzzles/" + parts[1].split("&")[0];
             }
         } else {
