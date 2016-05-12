@@ -673,7 +673,8 @@ var WORLD = (function () {
                 }
             }
         }
-        this.player.update(this, this.stepTimer !== null || this.triggering() || this.gameOver, sweeping, now, elapsed, keyboard, pointer);
+        var waiting = this.stepTimer !== null || this.triggering() || this.gameOver || this.resettingAnim !== null;
+        this.player.update(this, waiting, sweeping, now, elapsed, keyboard, pointer);
         if (this.player.moves.length >= this.moveLimit && !this.updating()) {
             this.tryRewind();
         }
@@ -973,6 +974,10 @@ var WORLD = (function () {
             context.drawImage(panel, 0, 0, sourceX, panel.height, x, this.totalHeight(), tileWidth, panel.height * scale);
         }
         
+        if (this.resettingAnim !== null) {
+            context.globalAlpha = 1 - this.resettingAnim.fractionComplete;
+        }
+        
         var minRow = 0,
             maxRow = this.height;
             
@@ -1016,6 +1021,9 @@ var WORLD = (function () {
                 this.player.draw(context, this, scale);
             }
         }
+
+        context.globalAlpha = 1;
+        
         var moveText = this.player.moves.length + " of " + this.moveLimit,
             replayText = this.replayers.length + " of " + this.replayLimit,
             shadow = "rgb(0,0,0)",
