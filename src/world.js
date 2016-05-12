@@ -100,7 +100,7 @@ var WORLD = (function () {
             if (track == 1 && entropy.select(0.5)) {
                 continue;
             }
-            var tune = new BLORT.Tune("sounds/MusicLoop0" + track + ".wav");
+            var tune = new BLORT.Tune("sounds/MusicLoop0" + track);
             tune.setVolume(0.0);
             musicTracks.push(tune);
         }
