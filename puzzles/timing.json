@@ -1,0 +1,65 @@
+{
+    "width": 7,
+    "height": 4,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 4,
+    "moveLimit": 9,
+    "triggers": [
+        {
+            "i": 2,
+            "j": 0,
+            "action": "Counterclock",
+            "tint": 0
+        },
+        {
+            "i": 3,
+            "j": 1,
+            "action": "Counterclock",
+            "tint": 1
+        },
+        {
+            "i": 4,
+            "j": 2,
+            "action": "Counterclock",
+            "tint": 2
+        },
+        {
+            "i": 5,
+            "j": 3,
+            "action": "Counterclock",
+            "tint": 3
+        }
+    ],
+    "hands": [
+        {
+            "i": 7,
+            "j": 1,
+            "angle": 0,
+            "persist": false,
+            "trigger": 0
+        },
+        {
+            "i": 7,
+            "j": 2,
+            "angle": 0,
+            "persist": false,
+            "trigger": 1
+        },
+        {
+            "i": 7,
+            "j": 3,
+            "angle": 0,
+            "persist": false,
+            "trigger": 2
+        },
+        {
+            "i": 7,
+            "j": 4,
+            "angle": 0,
+            "persist": false,
+            "trigger": 3
+        }
+    ],
+    "decos": []
+}

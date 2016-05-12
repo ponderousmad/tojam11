@@ -69,10 +69,10 @@ var WORLD = (function () {
         goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
-        crankSound = new BLORT.Noise("sounds/crank01.wav"),
-        crankRevSound = new BLORT.Noise("sounds/crankREV.wav"),
-        tickSound = new BLORT.Noise("sounds/clockturn01.wav"),
-        tickRevSound = new BLORT.Noise("sounds/clockturnREV.wav"),
+        crankSound = new BLORT.Noise("sounds/crank01B.wav"),
+        crankRevSound = new BLORT.Noise("sounds/crankREVB.wav"),
+        tickSound = new BLORT.Noise("sounds/clockturn01B.wav"),
+        tickRevSound = new BLORT.Noise("sounds/clockturnREVB.wav"),
         alarmSound = new BLORT.Noise("sounds/alarm.wav"),
         victorySound = new BLORT.Noise("sounds/victory.wav"),
         deathSounds = [],
@@ -89,6 +89,11 @@ var WORLD = (function () {
             "puzzles/puzzle6.json",
             "puzzles/puzzle7.json",
             "puzzles/puzzle8.json"
+        ],
+        clockTween = [
+            (0,0),
+            (10,2),
+            
         ],
         puzzleIndex = 0,
         editArea = null;
