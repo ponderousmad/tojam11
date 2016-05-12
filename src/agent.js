@@ -330,7 +330,7 @@ var AGENT = (function () {
             if (this.push !== null) {
                 move = this.push.move;
                 moveFraction = this.push.hand.moveFraction();
-            } if (moveFraction !== null && this.moveIndex < this.moves.length) {
+            } else if (moveFraction !== null && this.moveIndex < this.moves.length) {
                 move = this.moves[this.moveIndex];
                 if (!canMove(world, this, move) & moveFraction > 0.5) {
                     moveFraction = 1 - moveFraction;
