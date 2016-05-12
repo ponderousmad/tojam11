@@ -1278,6 +1278,8 @@ var WORLD = (function () {
     function loadWorld(resource, world) {
         if (!world) {
             world = new World(10, 10);
+        } else {
+            world.checkpoint();
         }
 
         var request = new XMLHttpRequest();
