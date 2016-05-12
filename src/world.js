@@ -895,7 +895,7 @@ var WORLD = (function () {
             this.hands = [];
             this.triggers = [];
         } else if (keyboard.wasAsciiPressed("1") && keyboard.isShiftDown()) {
-            this.width = Math.max(this.width - 1, 2);
+            this.width = Math.max(this.width - 1, 4);
         } else if (keyboard.wasAsciiPressed("1")) {
             this.width = Math.min(this.width + 1, 10);
         } else if (keyboard.wasAsciiPressed("2") && keyboard.isShiftDown()) {
