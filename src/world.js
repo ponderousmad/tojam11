@@ -912,6 +912,10 @@ var WORLD = (function () {
             this.replayLimit = Math.min(this.replayLimit + 1, 5);
         } else if (keyboard.wasAsciiPressed("L")) {
             this.load(JSON.parse(editArea.value));
+        } else if (keyboard.wasAsciiPressed("N")) {
+            this.loadNext(1);
+        } else if (keyboard.wasAsciiPressed("P")) {
+            this.loadNext(-1);
         }
         return true;
     };
@@ -1186,10 +1190,7 @@ var WORLD = (function () {
     };
 
     World.prototype.onWin = function () {
-        puzzleIndex += 1;
-        if (puzzleIndex < puzzles.length) {
-            loadWorld(puzzles[puzzleIndex], this);
-        }
+        this.loadNext(1);
     };
 
     World.prototype.startRestep = function () {
@@ -1275,9 +1276,20 @@ var WORLD = (function () {
         this.loading = false;
     };
 
+    World.prototype.loadNext = function (offset) {
+        puzzleIndex += offset;
+        if (0 <= puzzleIndex && puzzleIndex < puzzles.length) {
+            loadWorld(puzzles[puzzleIndex], this);
+        }
+    };
+
     function loadWorld(resource, world) {
         if (!world) {
             world = new World(10, 10);
+            var parts = window.location.href.split("load=");
+            if (parts.length > 0) {
+                resource = "puzzles/" + parts[1].split("&")[0];
+            }
         } else {
             world.checkpoint();
         }
