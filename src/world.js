@@ -1143,6 +1143,16 @@ var WORLD = (function () {
             this.rewinder.add(new Unring(trigger, exits));
         } else if(trigger.action == TRIGGER_ACTIONS.Exit) {
             victorySound.play();
+            
+            if (agent != this.player) {
+                var i = agent.i,
+                    j = agent.j;
+                agent.i = this.player.i;
+                agent.j = this.player.j;
+                this.player.i = i;
+                this.player.j = j;
+            }
+
             this.player.win();
         }
     };
