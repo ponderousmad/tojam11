@@ -1174,11 +1174,12 @@ var WORLD = (function () {
         if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
             crankSound.play();
             tickSound.play();
+            var pushed = [];
             for (var h = 0; h < this.hands.length; ++h) {
                 var hand = this.hands[h];
                 if (hand.trigger == trigger) {
                     var push = hand.turn();
-                    this.sweep(push);
+                    this.sweep(push, pushed);
                 }
             }
         } else if(trigger.action == TRIGGER_ACTIONS.Mousetrap) {
@@ -1215,11 +1216,21 @@ var WORLD = (function () {
             this.player.win();
         }
     };
+    
+    function inList(list, item) {
+        for (var i = 0; i < list.length; ++i) {
+            if (list[i] == item) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    World.prototype.sweep = function (push) {
+    World.prototype.sweep = function (push, pushed) {
         var sweeps = [],
             squishes = [];
-        if (this.player.isAt(push.i, push.j)) {
+        if (this.player.isAt(push.i, push.j) && !inList(pushed, this.player)) {
+            pushed.push(this.player);
             if (this.canMove(this.player, push.newI, push.newJ, push.hand)) {
                 this.player.sweep(push);
                 sweeps.push(new Unmove(this.player, push.move, true));
@@ -1231,7 +1242,8 @@ var WORLD = (function () {
 
         for (var r = 0; r < this.replayers.length; ++r) {
             var replayer = this.replayers[r];
-            if (replayer.isAt(push.i, push.j) && !replayer.squished()) {
+            if (replayer.isAt(push.i, push.j) && !replayer.squished() && !inList(pushed, replayer)) {
+                pushed.push(replayer);
                 if (this.canMove(replayer, push.newI, push.newJ, push.hand)) {
                     replayer.sweep(push);
                     sweeps.push(new Unmove(replayer, push.move, true));
