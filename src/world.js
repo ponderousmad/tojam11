@@ -1378,6 +1378,8 @@ var WORLD = (function () {
         this.hands = [];
         this.decos = [];
         this.replayers = [];
+        this.rewinder = new Rewinder();
+        this.rewinding = false;
 
         for (var t = 0; t < data.triggers.length; ++t) {
             var tData = data.triggers[t];
