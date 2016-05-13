@@ -74,8 +74,11 @@ var WORLD = (function () {
         tickSound = new BLORT.Noise("sounds/clockturn01B.wav"),
         tickRevSound = new BLORT.Noise("sounds/clockturn01REVB.wav"),
         alarmSound = new BLORT.Noise("sounds/alarm.wav"),
+        alarmRevSound = new BLORT.Noise("sounds/alarmRevB.wav"),
         victorySound = new BLORT.Noise("sounds/victory.wav"),
+        resetSound = new BLORT.Noise("sounds/reset.wav"),
         deathSounds = [],
+        deathRevSounds = [],
         musicTracks = [],
         music = null,
         nextTint = 0,
@@ -118,8 +121,8 @@ var WORLD = (function () {
             musicTracks.push(tune);
         }
         for (var d = 1; d <= DEATHS; ++d) {
-            var noise = new BLORT.Noise("sounds/death0" + d + ".wav");
-            deathSounds.push(noise);
+            deathSounds.push(new BLORT.Noise("sounds/death0" + d + ".wav"));
+            deathRevSounds.push(new BLORT.Noise("sounds/death0" + d + "REV.wav"));
         }
     }());
     
@@ -511,6 +514,7 @@ var WORLD = (function () {
     }
     
     Unsquish.prototype.start = function () {
+        entropy.randomElement(deathRevSounds).play();
     };
 
     Unsquish.prototype.update = function (world, fraction) {
@@ -527,6 +531,7 @@ var WORLD = (function () {
     }
     
     Unring.prototype.start = function () {
+        alarmRevSound.play();
     };
 
     Unring.prototype.update = function (world, fraction) {
@@ -683,6 +688,7 @@ var WORLD = (function () {
                 this.reset();
             } else {
                 this.resettingAnim = resetFlip.setupPlayback(DEFAULT_FRAME_TIME, false);
+                resetSound.play();
             }
         }
 
