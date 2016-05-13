@@ -15,7 +15,7 @@
         {
             "i": 0,
             "j": 4,
-            "action": "Clockwise",
+            "action": "Counterclock",
             "tint": 2
         },
         {
@@ -116,6 +116,13 @@
             "j": 2,
             "angle": 1,
             "persist": false
+        }
+    ],
+    "decos": [
+        {
+            "i": 2,
+            "j": 0,
+            "deco": 1
         }
     ]
 }
