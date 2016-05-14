@@ -1249,14 +1249,14 @@ var WORLD = (function () {
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
         
         if (showingTutorial) {
-            var textLeft = -32,
+            var textLeft = -27,
                 TEXT_HEIGHT = 40,
-                Y_ADJUST = 13,
+                Y_ADJUST = 18,
                 yOffset = Y_ADJUST - (this.tutorial.length - 1) * TEXT_HEIGHT * 0.5;
             textAnim.draw(context, textLeft, this.totalHeight() * 0.5 + Y_ADJUST, BLIT.ALIGN.Left | BLIT.ALIGN.Center);
             context.font = "20px sans-serif";
             for (var line = 0; line < this.tutorial.length; ++line) {
-                BLIT.centeredText(context, this.tutorial[line], 235, this.totalHeight() * 0.5 + yOffset, "black");
+                BLIT.centeredText(context, this.tutorial[line], textLeft + 270, this.totalHeight() * 0.5 + yOffset, "black");
                 yOffset += TEXT_HEIGHT;
             }
         }
