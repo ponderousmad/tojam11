@@ -228,9 +228,19 @@ var WORLD = (function () {
         return this.triggered && this.triggerAnim && this.triggerAnim.fractionComplete < 1;
     };
 
-    Trigger.prototype.draw = function (context, world, scale) {
+    Trigger.prototype.draw = function (context, world, scale, underHands) {
         var x = (this.i + 0.5) * world.tileWidth,
             y = (this.j + 0.5) * world.tileHeight;
+        
+        if (this.action === TRIGGER_ACTIONS.Exit) {
+            if (!this.triggerAnim) {
+                this.triggerAnim = exitBlockFlip.setupPlayback(RING_FRAME_TIME, false);
+            } else if (this.triggerAnim.fractionComplete === 1 && !underHands) {
+                return;
+            }
+        } else if(underHands === (this.action === TRIGGER_ACTIONS.Alarm)) {
+            return;
+        }
         if (this.action === TRIGGER_ACTIONS.Clockwise || this.action === TRIGGER_ACTIONS.Counterclock) {
             var mirror = this.action === TRIGGER_ACTIONS.Counterclock,
                 width = crankImage.width * scale,
@@ -243,11 +253,6 @@ var WORLD = (function () {
             BLIT.draw(context, trapImage, x, y, BLIT.ALIGN.Center, trapImage.width * scale, trapImage.height * scale);
             BLIT.draw(context, trapCheese, x, y, BLIT.ALIGN.Center, trapCheese.width * scale, trapCheese.height * scale);
             return;
-        }
-        if (this.action === TRIGGER_ACTIONS.Exit) {
-            if (!this.triggerAnim) {
-                this.triggerAnim = exitBlockFlip.setupPlayback(RING_FRAME_TIME, false);
-            }
         }
         if (this.action === TRIGGER_ACTIONS.Alarm) {
             if (!this.triggerAnim) {
@@ -1159,6 +1164,10 @@ var WORLD = (function () {
             minRow = Math.min(minRow, this.triggers[i].j);
             maxRow = Math.max(maxRow, this.triggers[i].j);
         }
+        
+        for (var t = 0; t < this.triggers.length; ++t) {
+            this.triggers[t].draw(context, this, scale, true);
+        }
 
         for (var row = minRow; row <= maxRow; ++row) {
             for (var h = 0; h < this.hands.length; ++h) {
@@ -1169,9 +1178,9 @@ var WORLD = (function () {
         }
 
         for (row = minRow; row <= maxRow; ++row) {
-            for (var t = 0; t < this.triggers.length; ++t) {
+            for (t = 0; t < this.triggers.length; ++t) {
                 if (this.triggers[t].j === row) {
-                    this.triggers[t].draw(context, this, scale);
+                    this.triggers[t].draw(context, this, scale, false);
                 }
             }
             
