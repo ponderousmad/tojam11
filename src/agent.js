@@ -170,7 +170,14 @@ var AGENT = (function () {
         if (this.push !== null) {
             return true;
         }
-        return this.walk !== null;
+        return false;
+    };
+    
+    Player.prototype.animating = function () {
+        if (this.deathAnim !== null && this.deathAnim.fractionComplete === 1) {
+            return false;
+        }
+        return this.updating() || this.walk !== null;
     };
 
     Player.prototype.tryMove = function (world, iStep, jStep) {

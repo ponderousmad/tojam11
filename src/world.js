@@ -831,7 +831,7 @@ var WORLD = (function () {
             rewindSound.play();
         } else {
             this.gameOver = true;
-            if (!this.shownResetTutorial && !this.updating()) {
+            if (!this.shownResetTutorial && !this.updating(true)) {
                 this.tutorial = resetTutorial;
                 this.showTutorial = true;
                 this.tutorialTimer = TUTORIAL_TIME;
@@ -849,11 +849,15 @@ var WORLD = (function () {
         return this.activatedTriggers.length > 0;
     };
 
-    World.prototype.updating = function () {
+    World.prototype.updating = function (animating) {
         if (this.stepTimer !== null) {
             return true;
         }
-        if (this.player.updating()) {
+        if (animating) {
+            if (this.player.animating()) {
+                return true;
+            }
+        } else if (this.player.updating()) {
             return true;
         }
         for (var r = 0; r < this.replayers.length; ++r) {
