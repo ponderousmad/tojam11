@@ -9,7 +9,7 @@
         {
             "i": 2,
             "j": 1,
-            "action": "Counterclock",
+            "action": "Clockwise",
             "tint": 4
         },
         {
@@ -33,27 +33,6 @@
     ],
     "hands": [
         {
-            "i": 1,
-            "j": 3,
-            "angle": 2,
-            "persist": false,
-            "trigger": 0
-        },
-        {
-            "i": 6,
-            "j": 0,
-            "angle": 2,
-            "persist": false,
-            "trigger": 0
-        },
-        {
-            "i": 3,
-            "j": 0,
-            "angle": 2,
-            "persist": false,
-            "trigger": 1
-        },
-        {
             "i": 0,
             "j": 3,
             "angle": 1,
@@ -63,62 +42,76 @@
         {
             "i": 1,
             "j": 4,
-            "angle": 0,
+            "angle": 3,
             "persist": false
         },
         {
-            "i": 2,
-            "j": 3,
-            "angle": 2,
-            "persist": false
-        },
-        {
-            "i": 3,
-            "j": 3,
-            "angle": 2,
-            "persist": false
-        },
-        {
-            "i": 4,
-            "j": 3,
-            "angle": 2,
-            "persist": false
-        },
-        {
-            "i": 4,
-            "j": 2,
-            "angle": 1,
-            "persist": false
-        },
-        {
-            "i": 5,
-            "j": 2,
-            "angle": 2,
-            "persist": false
-        },
-        {
-            "i": 5,
+            "i": 6,
             "j": 1,
-            "angle": 1,
+            "angle": 0,
             "persist": false
         },
         {
             "i": 6,
             "j": 1,
             "angle": 2,
-            "persist": false
+            "persist": false,
+            "trigger": 0
         },
         {
-            "i": 7,
-            "j": 1,
+            "i": 0,
+            "j": 3,
+            "angle": 0,
+            "persist": false,
+            "trigger": 0
+        },
+        {
+            "i": 3,
+            "j": 0,
             "angle": 2,
-            "persist": false
+            "persist": false,
+            "trigger": 1
         },
         {
             "i": 2,
-            "j": 4,
+            "j": 3,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 3,
+            "j": 3,
             "angle": 3,
             "persist": false
+        },
+        {
+            "i": 3,
+            "j": 2,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 4,
+            "j": 2,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 3,
+            "angle": 0,
+            "persist": false
         }
+    ],
+    "decos": [
+        {
+            "i": 5,
+            "j": 2,
+            "deco": 3
+        }
+    ],
+    "tutorial": [
+        "Things worth doing",
+        "May be worth redoing."
     ]
 }
