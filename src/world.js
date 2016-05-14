@@ -47,7 +47,6 @@ var WORLD = (function () {
         movePanel = batch.load("moves-box.png"),
         rewindPanel = batch.load("rewinds-box.png"),
         wordLevel = batch.load("level-text.png"),
-        textBubble = batch.load("text-bubble.png"),
         handImage = batch.load("clock-hand.png"),
         persistOverlay = batch.load("hand-persist-2.png"),
         persistTint = batch.load("hand-persist-1.png"),
@@ -69,6 +68,7 @@ var WORLD = (function () {
         resetFlip = new BLIT.Flip(batch, "reset_", 18, 2),
         resetAnim = resetFlip.setupPlayback(DEFAULT_FRAME_TIME, false, 0),
         titleAnim = new BLIT.Flip(batch, "title_", 12, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
+        textAnim = new BLIT.Flip(batch, "text-bubble_", 10, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatTalk = new BLIT.Flip(batch, "goat-talk_", 3, 2).setupPlayback(120, true),
@@ -746,6 +746,7 @@ var WORLD = (function () {
         AGENT.updateAnims(elapsed);
         
         if (this.showTutorial || (this.tutorialTimer !== null && this.tutorialTimer > 0)) {
+            textAnim.update(elapsed);
             this.tutorialTimer -= elapsed;
             BLIT.updatePlaybacks(elapsed, [goatTalk]);
             if (this.tutorialTimer < 0 && (keyboard.keysDown() > 0 || pointer.activated())) {
@@ -1248,7 +1249,7 @@ var WORLD = (function () {
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
         
         if (showingTutorial) {
-            BLIT.draw(context, textBubble, 0, this.totalHeight() * 0.5, BLIT.ALIGN.Left | BLIT.ALIGN.Center);
+            textAnim.draw(context, 0, this.totalHeight() * 0.5, BLIT.ALIGN.Left | BLIT.ALIGN.Center);
             context.font = "20px sans-serif";
             var TEXT_HEIGHT = 40,
                 yOffset = -(this.tutorial.length - 1) * TEXT_HEIGHT * 0.5;
