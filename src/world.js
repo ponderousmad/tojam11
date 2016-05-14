@@ -68,7 +68,7 @@ var WORLD = (function () {
         resetFlip = new BLIT.Flip(batch, "reset_", 18, 2),
         resetAnim = resetFlip.setupPlayback(DEFAULT_FRAME_TIME, false, 0),
         titleAnim = new BLIT.Flip(batch, "title_", 12, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
-        textAnim = new BLIT.Flip(batch, "text-bubble_", 10, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
+        textAnim = new BLIT.Flip(batch, "text-bubble_", 10, 2).setupPlayback(DEFAULT_FRAME_TIME * 2, true),
         goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatTalk = new BLIT.Flip(batch, "goat-talk_", 3, 2).setupPlayback(120, true),
@@ -1224,7 +1224,7 @@ var WORLD = (function () {
         context.font = "14px sans-serif";
         BLIT.draw(context, movePanel, this.tileWidth, uiY, BLIT.ALIGN.Center, movePanel.width * uiScale, movePanel.height * uiScale);
         BLIT.draw(context, rewindPanel, 2.25 * this.tileWidth, uiY, BLIT.ALIGN.Center, rewindPanel.width * uiScale, rewindPanel.height * uiScale);
-        BLIT.centeredText(context, moveText, this.tileWidth, uiY + 6, "rgb(255,0,0)", shadow, 1);
+        BLIT.centeredText(context, moveText, this.tileWidth, uiY + 6, "#ff9c00", shadow, 1);
         BLIT.centeredText(context, replayText, 2.25 * this.tileWidth, uiY + 6, "rgb(255,255,0)", shadow, 1);
         
         var levelNumber = "" + (puzzleIndex + 1),
@@ -1249,12 +1249,14 @@ var WORLD = (function () {
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
         
         if (showingTutorial) {
-            textAnim.draw(context, 0, this.totalHeight() * 0.5, BLIT.ALIGN.Left | BLIT.ALIGN.Center);
+            var textLeft = -32,
+                TEXT_HEIGHT = 40,
+                Y_ADJUST = 13,
+                yOffset = Y_ADJUST - (this.tutorial.length - 1) * TEXT_HEIGHT * 0.5;
+            textAnim.draw(context, textLeft, this.totalHeight() * 0.5 + Y_ADJUST, BLIT.ALIGN.Left | BLIT.ALIGN.Center);
             context.font = "20px sans-serif";
-            var TEXT_HEIGHT = 40,
-                yOffset = -(this.tutorial.length - 1) * TEXT_HEIGHT * 0.5;
             for (var line = 0; line < this.tutorial.length; ++line) {
-                BLIT.centeredText(context, this.tutorial[line], 270, this.totalHeight() * 0.5 + yOffset, "black");
+                BLIT.centeredText(context, this.tutorial[line], 235, this.totalHeight() * 0.5 + yOffset, "black");
                 yOffset += TEXT_HEIGHT;
             }
         }
