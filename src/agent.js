@@ -306,6 +306,17 @@ var AGENT = (function () {
     Replayer.prototype.sweep = function (push) {
         this.push = push;
     };
+    
+    Replayer.prototype.drawSplat = function (context, world, imageScale) {
+        var x = (this.i + 0.5) * world.tileWidth,
+            y = (this.j + 0.5) * world.tileHeight;
+        context.save();
+        var splatFactor = this.deathAnim.fractionComplete;
+        context.globalAlpha = splatFactor * context.globalAlpha;
+        splatFactor *= imageScale;
+        BLIT.draw(context, splatImage, x, y, BLIT.ALIGN.Center, splatImage.width * splatFactor, splatImage.height * splatFactor);
+        context.restore();
+    };
 
     Replayer.prototype.draw = function (context, world, imageScale, moveFraction) {
         var x = (this.i + 0.5) * world.tileWidth,
@@ -314,12 +325,6 @@ var AGENT = (function () {
             anim = replayerAnim;
         if (this.deathAnim) {
             anim = this.deathAnim;
-            context.save();
-            var splatFactor = this.deathAnim.fractionComplete;
-            context.globalAlpha = splatFactor;
-            splatFactor *= imageScale;
-            BLIT.draw(context, splatImage, x, y, BLIT.ALIGN.Center, splatImage.width * splatFactor, splatImage.height * splatFactor);
-            context.restore();
             if (this.deathAnim.fractionComplete >= 1.0) {
                 return;
             }

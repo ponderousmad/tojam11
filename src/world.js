@@ -1130,6 +1130,16 @@ var WORLD = (function () {
             }
             
             for (var r = 0; r < this.replayers.length; ++r) {
+                var unplayer = this.replayers[r];
+                if (Math.floor(unplayer.j) != row) {
+                    continue;
+                }
+                if (unplayer.deathAnim !== null) {
+                    unplayer.drawSplat(context, this, scale);
+                }
+            }
+            
+            for (r = 0; r < this.replayers.length; ++r) {
                 var replayer = this.replayers[r],
                     stepFraction = null;
                 if (Math.floor(replayer.j) != row) {
