@@ -70,6 +70,7 @@ var WORLD = (function () {
         titleAnim = new BLIT.Flip(batch, "title_", 12, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatExcited = new BLIT.Flip(batch, "_goat_excited_", 15, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
         goatStoic = new BLIT.Flip(batch, "_goat_stoic_", 1, 2).setupPlayback(DEFAULT_FRAME_TIME, true),
+        goatTalk = new BLIT.Flip(batch, "goat-talk_", 3, 2).setupPlayback(120, true),
         rewindSound = new BLORT.Noise("sounds/rewind01.wav"),
         crankSound = new BLORT.Noise("sounds/crank01B.wav"),
         crankRevSound = new BLORT.Noise("sounds/crankREVB.wav"),
@@ -707,6 +708,7 @@ var WORLD = (function () {
         AGENT.updateAnims(elapsed);
         
         if (this.tutorial) {
+            BLIT.updatePlaybacks(elapsed, [goatTalk]);
             if (keyboard.keysDown() > 0 || pointer.activated()) {
                 this.tutorial = null;
             }
@@ -714,7 +716,7 @@ var WORLD = (function () {
         }
 
         if (this.rewinding) {
-            BLIT.updatePlaybacks(elapsed, [goatExcited, goatStoic]);
+            BLIT.updatePlaybacks(elapsed, [goatExcited]);
             if (!this.rewinder.update(this, now, elapsed)) {
                 this.rewound();
             }
@@ -1189,7 +1191,7 @@ var WORLD = (function () {
         var reset = this.resettingAnim !== null ? this.resettingAnim : resetAnim;
         reset.draw(context, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, reset.width() * scale, reset.height() * scale);
 
-        var goat = this.rewinding ? goatExcited : goatStoic;
+        var goat = this.rewinding ? goatExcited : (this.tutorial ? goatTalk : goatStoic);
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
         
         if (this.tutorial) {
