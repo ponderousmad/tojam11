@@ -1,6 +1,6 @@
 {
     "width": 5,
-    "height": 4,
+    "height": 2,
     "startI": 0,
     "startJ": 0,
     "replayLimit": 2,
@@ -8,13 +8,13 @@
     "triggers": [
         {
             "i": 4,
-            "j": 2,
+            "j": 0,
             "action": "Exit",
             "tint": 0
         },
         {
-            "i": 4,
-            "j": 0,
+            "i": 3,
+            "j": 1,
             "action": "Alarm",
             "tint": 2
         },
@@ -99,9 +99,13 @@
     ],
     "decos": [
         {
-            "i": 0,
-            "j": 3,
+            "i": 1,
+            "j": 0,
             "deco": 0
         }
+    ],
+    "tutorial": [
+        "An action causes a reaction,",
+        "And so on down the chain."
     ]
 }

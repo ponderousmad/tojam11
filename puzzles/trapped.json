@@ -1,0 +1,35 @@
+{
+    "width": 4,
+    "height": 2,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 1,
+    "moveLimit": 3,
+    "triggers": [
+        {
+            "i": 3,
+            "j": 0,
+            "action": "Exit",
+            "tint": 0
+        },
+        {
+            "i": 2,
+            "j": 0,
+            "action": "Mousetrap",
+            "tint": 1
+        }
+    ],
+    "hands": [],
+    "decos": [
+        {
+            "i": 1,
+            "j": 1,
+            "deco": 3
+        }
+    ],
+    "tutorial": [
+        "Just step over the",
+        "corpse and move on to",
+        "a brighter tomorrow."
+    ]
+}

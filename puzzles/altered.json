@@ -1,0 +1,67 @@
+{
+    "width": 5,
+    "height": 3,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 1,
+    "moveLimit": 4,
+    "triggers": [
+        {
+            "i": 1,
+            "j": 0,
+            "action": "Clockwise",
+            "tint": 0
+        },
+        {
+            "i": 4,
+            "j": 0,
+            "action": "Exit",
+            "tint": 1
+        },
+        {
+            "i": 3,
+            "j": 1,
+            "action": "Mousetrap",
+            "tint": 2
+        },
+        {
+            "i": 3,
+            "j": 2,
+            "action": "Alarm",
+            "tint": 3
+        }
+    ],
+    "hands": [
+        {
+            "i": 1,
+            "j": 1,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 2,
+            "j": 1,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 3,
+            "j": 1,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 0,
+            "j": 2,
+            "angle": 3,
+            "persist": false,
+            "trigger": 0
+        }
+    ],
+    "decos": [],
+    "tutorial": [
+        "The definition of insanity,",
+        "is repeating the same thing and",
+        "expecting a different result."
+    ]
+}

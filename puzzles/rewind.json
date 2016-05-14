@@ -17,6 +17,12 @@
             "j": 2,
             "action": "Alarm",
             "tint": 4
+        },
+        {
+            "i": 2,
+            "j": 0,
+            "action": "Mousetrap",
+            "tint": 3
         }
     ],
     "hands": [
@@ -24,12 +30,6 @@
             "i": 1,
             "j": 1,
             "angle": 0,
-            "persist": false
-        },
-        {
-            "i": 2,
-            "j": 1,
-            "angle": 1,
             "persist": false
         },
         {
@@ -61,6 +61,7 @@
     "tutorial": [
         "History repeats.",
         "But past actions can",
-        "have consequences."
+        "have consequences.",
+        "And watch out for traps."
     ]
 }
