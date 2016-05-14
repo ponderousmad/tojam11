@@ -45,6 +45,7 @@ var WORLD = (function () {
         panel = batch.load("panel.png"),
         movePanel = batch.load("moves-box.png"),
         rewindPanel = batch.load("rewinds-box.png"),
+        wordLevel = batch.load("level-text.png"),
         textBubble = batch.load("text-bubble.png"),
         handImage = batch.load("clock-hand.png"),
         persistOverlay = batch.load("hand-persist-2.png"),
@@ -61,6 +62,7 @@ var WORLD = (function () {
             batch.load("variant-tile.png"),
             batch.load("variant-tile2.png")
         ],
+        levelDigits = [],
         exitBlockFlip = new BLIT.Flip(batch, "skull_", RING_FRAMES, 2),
         alarmFlip = new BLIT.Flip(batch, "alarm-shake_", RING_FRAMES, 2),
         resetFlip = new BLIT.Flip(batch, "reset_", 18, 2),
@@ -111,6 +113,9 @@ var WORLD = (function () {
         editArea = null;
 
     (function () {
+        for (var digit = 0; digit < 10; ++digit) {
+            levelDigits.push(batch.load("level-" + digit + ".png"));
+        }
         batch.commit();
         var TRACKS = 2, DEATHS = 2;
         for (var track = 1; track <= TRACKS; ++track) {
@@ -1168,8 +1173,18 @@ var WORLD = (function () {
         BLIT.centeredText(context, moveText, this.tileWidth, uiY + 6, "rgb(255,0,0)", shadow, 1);
         BLIT.centeredText(context, replayText, 2.25 * this.tileWidth, uiY + 6, "rgb(255,255,0)", shadow, 1);
         
-        context.font = "24px sans-serif";
-        BLIT.centeredText(context, "LEVEL " + (puzzleIndex + 1), this.width * 0.5 * this.tileWidth, -this.tileHeight * 0.75, "rgb(196,0,196)", shadow, 2);
+        var levelNumber = "" + (puzzleIndex + 1),
+            levelWidth = wordLevel.width * scale,
+            levelDigitWidth = levelDigits[0].width * scale,
+            levelY = -this.tileHeight * 0.75,
+            levelX = (this.totalWidth() - (levelWidth + levelDigitWidth * levelNumber.length)) * 0.5;
+        BLIT.draw(context, wordLevel, levelX, levelY, BLIT.ALIGN.Left, levelWidth, wordLevel.height * scale);
+        levelX += levelWidth;
+        for (var levelDigit = 0; levelDigit < levelNumber.length; ++levelDigit) {
+            var digitImage = levelDigits[parseInt(levelNumber[levelDigit], 10)];
+            BLIT.draw(context, digitImage, levelX, levelY, BLIT.ALIGN.Left, levelDigitWidth, digitImage.height * scale);
+            levelX += levelDigitWidth;
+        }
         
         var reset = this.resettingAnim !== null ? this.resettingAnim : resetAnim;
         reset.draw(context, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, reset.width() * scale, reset.height() * scale);
