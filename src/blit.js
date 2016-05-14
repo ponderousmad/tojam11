@@ -17,7 +17,8 @@ var BLIT = (function () {
         Both: 3
     };
     
-    var batchesPending = 0;
+    var batchesPending = 0,
+        tintCache = {};
 
     function Batch(basePath, onComplete) {
         this._toLoad = 0;
@@ -80,26 +81,38 @@ var BLIT = (function () {
         context.drawImage(image, x - width * 0.5, y - height * 0.5, width, height);
     }
     
-    var tintCanvas = document.createElement('canvas'),
-        tintContext = tintCanvas.getContext('2d');
+    function cacheTint(image, tint, canvas) {
+        tintCache[image.src + tint] = canvas;
+    }
+    
+    function checkTintCache(image, tint) {
+        return tintCache[image.src + tint];
+    }
     
     function drawTinted(context, image, x, y, width, height, tint) {
-        tintCanvas.width = image.width;
-        tintCanvas.height = image.height;
-        tintContext.clearRect(0, 0, image.width + 2, image.height + 2);
-        tintContext.drawImage(image, 0, 0);
+        var tintCanvas = checkTintCache(image, tint);
         
-        var buffer = tintContext.getImageData(0, 0, image.width, image.height),
-            data = buffer.data;
+        if (!tintCanvas) {
+            tintCanvas = document.createElement('canvas');
+            var tintContext = tintCanvas.getContext('2d');
+            tintCanvas.width = image.width;
+            tintCanvas.height = image.height;
+            tintContext.clearRect(0, 0, image.width + 2, image.height + 2);
+            tintContext.drawImage(image, 0, 0);
 
-        // Adapted from: http://stackoverflow.com/questions/18576702/how-to-tint-an-image-in-html5
-        for (var i = 0; i < data.length; i += 4) {
-            data[i]     = data[i]     * tint[0];  /// add R
-            data[i + 1] = data[i + 1] * tint[1];  /// add G
-            data[i + 2] = data[i + 2] * tint[2];  /// add B
+            var buffer = tintContext.getImageData(0, 0, image.width, image.height),
+                data = buffer.data;
+
+            // Adapted from: http://stackoverflow.com/questions/18576702/how-to-tint-an-image-in-html5
+            for (var i = 0; i < data.length; i += 4) {
+                data[i]     = data[i]     * tint[0];  /// add R
+                data[i + 1] = data[i + 1] * tint[1];  /// add G
+                data[i + 2] = data[i + 2] * tint[2];  /// add B
+            }
+
+            tintContext.putImageData(buffer, 0, 0);
+            cacheTint(image, tint, tintCanvas);
         }
-
-        tintContext.putImageData(buffer, 0, 0);
 
         context.drawImage(tintCanvas, 0, 0, image.width, image.height, x, y, width, height);
     }
