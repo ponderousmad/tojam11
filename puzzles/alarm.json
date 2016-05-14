@@ -1,0 +1,49 @@
+{
+    "width": 4,
+    "height": 3,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 2,
+    "moveLimit": 9,
+    "triggers": [
+        {
+            "i": 2,
+            "j": 2,
+            "action": "Alarm",
+            "tint": 0
+        },
+        {
+            "i": 3,
+            "j": 0,
+            "action": "Exit",
+            "tint": 1
+        }
+    ],
+    "hands": [
+        {
+            "i": 2,
+            "j": 2,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 2,
+            "j": 2,
+            "angle": 1,
+            "persist": false
+        }
+    ],
+    "decos": [
+        {
+            "i": 1,
+            "j": 1,
+            "deco": 1
+        }
+    ],
+    "tutorial": [
+        "The hands of TIME may",
+        "lengthen your journey.",
+        "And DEATH guards the way.",
+        "Now you should be alarmed."
+    ]
+}

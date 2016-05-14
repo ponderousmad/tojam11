@@ -14,7 +14,7 @@
         },
         {
             "i": 0,
-            "j": 3,
+            "j": 2,
             "action": "Alarm",
             "tint": 2
         }
@@ -35,20 +35,27 @@
         {
             "i": 1,
             "j": 2,
-            "angle": 3,
+            "angle": 1,
             "persist": false
         },
         {
             "i": 1,
-            "j": 3,
-            "angle": 3,
-            "persist": false
-        },
-        {
-            "i": 1,
-            "j": 4,
-            "angle": 3,
+            "j": 1,
+            "angle": 1,
             "persist": false
         }
+    ],
+    "decos": [
+        {
+            "i": 0,
+            "j": 3,
+            "deco": 2
+        }
+    ],
+    "tutorial": [
+        "Time and time again,",
+        "You make your moves.",
+        "With the last step,",
+        "Comes another chance."
     ]
 }

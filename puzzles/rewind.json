@@ -1,0 +1,66 @@
+{
+    "width": 4,
+    "height": 4,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 1,
+    "moveLimit": 4,
+    "triggers": [
+        {
+            "i": 3,
+            "j": 1,
+            "action": "Exit",
+            "tint": 1
+        },
+        {
+            "i": 2,
+            "j": 2,
+            "action": "Alarm",
+            "tint": 4
+        }
+    ],
+    "hands": [
+        {
+            "i": 1,
+            "j": 1,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 2,
+            "j": 1,
+            "angle": 1,
+            "persist": false
+        },
+        {
+            "i": 2,
+            "j": 2,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 3,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 3,
+            "angle": 3,
+            "persist": false
+        }
+    ],
+    "decos": [
+        {
+            "i": 0,
+            "j": 2,
+            "deco": 1
+        }
+    ],
+    "tutorial": [
+        "History repeats.",
+        "But past actions can",
+        "have consequences."
+    ]
+}

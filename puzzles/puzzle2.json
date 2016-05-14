@@ -57,5 +57,9 @@
             "persist": false,
             "trigger": 2
         }
+    ],
+    "tutorial": [
+        "Those who help themselves,",
+        "May find they get ahead."
     ]
 }

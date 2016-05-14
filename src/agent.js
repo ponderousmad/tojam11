@@ -170,7 +170,7 @@ var AGENT = (function () {
         if (this.push !== null) {
             return true;
         }
-        return false;
+        return this.walk !== null;
     };
 
     Player.prototype.tryMove = function (world, iStep, jStep) {

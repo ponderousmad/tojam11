@@ -1,0 +1,42 @@
+{
+    "width": 4,
+    "height": 2,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 0,
+    "moveLimit": 9,
+    "triggers": [
+        {
+            "i": 3,
+            "j": 0,
+            "action": "Exit",
+            "tint": 1
+        }
+    ],
+    "hands": [
+        {
+            "i": 1,
+            "j": 1,
+            "angle": 0,
+            "persist": false
+        },
+        {
+            "i": 1,
+            "j": 1,
+            "angle": 1,
+            "persist": false
+        }
+    ],
+    "decos": [
+        {
+            "i": 2,
+            "j": 1,
+            "deco": 0
+        }
+    ],
+    "tutorial": [
+        "Tap, click or use the",
+        "arrow keys to move",
+        "the mouse to his house."
+    ]
+}

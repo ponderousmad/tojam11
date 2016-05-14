@@ -39,6 +39,7 @@ var WORLD = (function () {
         RING_FRAME_TIME = DEFAULT_FRAME_TIME,
         RING_FRAMES = 60,
         RING_TOTAL = RING_FRAME_TIME * RING_FRAMES,
+        TUTORIAL_TIME = 500,
         batch = new BLIT.Batch("images/"),
         background = batch.load("bg.png"),
         tile2x2 = batch.load("floor-tile.png"),
@@ -87,7 +88,12 @@ var WORLD = (function () {
         nextTint = 0,
         entropy = ENTROPY.makeRandom(),
         puzzles = [
+            "puzzles/intro.json",
+            "puzzles/alarm.json",
             "puzzles/puzzle1.json",
+            "puzzles/rewind.json",
+            "puzzles/crank.json",
+            "puzzles/push.json",
             "puzzles/puzzle2.json",
             "puzzles/puzzle3.json",
             "puzzles/puzzle4.json",
@@ -109,6 +115,12 @@ var WORLD = (function () {
             [0.8, 0.95],
             [0.9, 1.05],
             [1.0, 1.00]
+        ],
+        resetTutorial = [
+            "You have run out of moves.",
+            "Click the hourglass, or",
+            "press the spacebar to",
+            "completely reset the level."
         ],
         puzzleIndex = 0,
         editArea = null;
@@ -187,9 +199,19 @@ var WORLD = (function () {
         this.triggerAnim = null;
     }
 
-    Trigger.prototype.rewind = function () {
+    Trigger.prototype.reset = function (triggers) {
         this.triggered = false;
         this.triggerAnim = null;
+        
+        if (this.action === TRIGGER_ACTIONS.Exit) {
+            for (var t = 0; t < triggers.length; ++t) {
+                if (triggers[t].action === TRIGGER_ACTIONS.Alarm) {
+                    return;
+                }
+            }
+            this.triggered = true;
+            this.triggerAnim = exitBlockFlip.setupPlayback(RING_FRAME_TIME, false, DEFAULT_FRAME_TIME * RING_FRAMES);
+        }
     };
 
     Trigger.prototype.contains = function (entity) {
@@ -617,17 +639,23 @@ var WORLD = (function () {
         this.gameOver = false;
         this.setupPlayer();
         this.musicTimer = null;
-        this.tutorial = ["TAP, CLICK, WASD", "or arrow keys to move."];
+        this.tutorial = null;
+        this.showTutorial = false;
+        this.tutorialTimer = null;
+        this.shownResetTutorial = false;
     }
+    
+    World.prototype.resetTriggers = function () {
+        for (var t = 0; t < this.triggers.length; ++t) {
+            this.triggers[t].reset(this.triggers);
+        }
+    };
 
-    World.prototype.reset = function() {
+    World.prototype.reset = function () {
         this.replayers = [];
         this.setupPlayer();
 
-        for (var t = 0; t < this.triggers.length; ++t) {
-            this.triggers[t].rewind();
-        }
-
+        this.resetTriggers();
         for (var h = 0; h < this.hands.length; ++h) {
             var hand = this.hands[h];
             hand.angle = hand.startAngle;
@@ -639,6 +667,8 @@ var WORLD = (function () {
         this.rewinder = new Rewinder();
         this.rewinding = false;
         this.gameOver = false;
+        
+        this.shownResetTutorial = false;
     };
 
     World.prototype.fadeMusic = function () {
@@ -707,12 +737,15 @@ var WORLD = (function () {
 
         AGENT.updateAnims(elapsed);
         
-        if (this.tutorial) {
+        if (this.showTutorial || (this.tutorialTimer !== null && this.tutorialTimer > 0)) {
+            this.tutorialTimer -= elapsed;
             BLIT.updatePlaybacks(elapsed, [goatTalk]);
-            if (keyboard.keysDown() > 0 || pointer.activated()) {
-                this.tutorial = null;
+            if (this.tutorialTimer < 0 && (keyboard.keysDown() > 0 || pointer.activated())) {
+                this.showTutorial = false;
             }
             return;
+        } else {
+            this.tutorialTimer = null;
         }
 
         if (this.rewinding) {
@@ -789,6 +822,12 @@ var WORLD = (function () {
             rewindSound.play();
         } else {
             this.gameOver = true;
+            if (!this.shownResetTutorial && !this.updating()) {
+                this.tutorial = resetTutorial;
+                this.showTutorial = true;
+                this.tutorialTimer = TUTORIAL_TIME;
+                this.shownResetTutorial = true;
+            }
         }
     };
 
@@ -1000,7 +1039,7 @@ var WORLD = (function () {
                 edit.lastHand.persist = !edit.lastHand.persist;
             } else if (edit.lastTrigger !== null) {
                 edit.lastTrigger.action = (edit.lastTrigger.action + 1) % TRIGGER_ACTIONS.COUNT;
-                edit.lastTrigger.triggerAnim = null;
+                this.resetTriggers();
             } else if (edit.lastDeco !== null) {
                 edit.lastDeco.deco = (edit.lastDeco.deco + 1) % DECORATIONS.length;
             }
@@ -1190,11 +1229,13 @@ var WORLD = (function () {
         
         var reset = this.resettingAnim !== null ? this.resettingAnim : resetAnim;
         reset.draw(context, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, reset.width() * scale, reset.height() * scale);
+        
+        var showingTutorial = this.showTutorial || (this.tutorialTimer !== null && this.tutorialTimer > 0);
 
-        var goat = this.rewinding ? goatExcited : (this.tutorial ? goatTalk : goatStoic);
+        var goat = this.rewinding ? goatExcited : (showingTutorial ? goatTalk : goatStoic);
         goat.draw(context, -this.tileHeight * 0.7, this.totalHeight() * 0.5, BLIT.ALIGN.Center, goat.width() * scale, goat.height() * scale, BLIT.MIRROR.Horizontal);
         
-        if (this.tutorial) {
+        if (showingTutorial) {
             BLIT.draw(context, textBubble, 0, this.totalHeight() * 0.5, BLIT.ALIGN.Left | BLIT.ALIGN.Center);
             context.font = "20px sans-serif";
             var TEXT_HEIGHT = 40,
@@ -1382,9 +1423,7 @@ var WORLD = (function () {
         for (var r = 0; r < this.replayers.length; ++r) {
             this.replayers[r].rewind();
         }
-        for (var t = 0; t < this.triggers.length; ++t) {
-            this.triggers[t].rewind();
-        }
+        this.resetTriggers();
         for (var h = 0; h < this.hands.length; ++h) {
             this.hands[h].rewind();
         }
@@ -1410,6 +1449,9 @@ var WORLD = (function () {
             hands: this.saveHands(),
             decos: this.saveDecos()
         };
+        if (this.tutorial) {
+            data.tutorial = this.tutorial;
+        }
         return JSON.stringify(data, null, 4);
     };
 
@@ -1442,8 +1484,8 @@ var WORLD = (function () {
         this.height = data.height;
         this.startI = data.startI;
         this.startJ = data.startJ;
-        this.replayLimit = data.replayLimit ? data.replayLimit : 4;
-        this.moveLimit = data.moveLimit ? data.moveLimit : 5;
+        this.replayLimit = data.replayLimit;
+        this.moveLimit = data.moveLimit;
         this.triggers = [];
         this.hands = [];
         this.decos = [];
@@ -1451,6 +1493,10 @@ var WORLD = (function () {
         this.replayers = [];
         this.rewinder = new Rewinder();
         this.rewinding = false;
+        this.tutorial = data.tutorial ? data.tutorial : null;
+        this.showTutorial = this.tutorial !== null;
+        this.tutorialTimer = this.showTutorial ? TUTORIAL_TIME : null;
+        this.shownResetTutorial = false;
 
         for (var t = 0; t < data.triggers.length; ++t) {
             var tData = data.triggers[t];
@@ -1472,6 +1518,7 @@ var WORLD = (function () {
         }
 
         this.setupPlayer();
+        this.resetTriggers();
         this.loading = false;
     };
 

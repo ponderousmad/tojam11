@@ -1,0 +1,42 @@
+{
+    "width": 5,
+    "height": 2,
+    "startI": 0,
+    "startJ": 0,
+    "replayLimit": 0,
+    "moveLimit": 4,
+    "triggers": [
+        {
+            "i": 1,
+            "j": 0,
+            "action": "Clockwise",
+            "tint": 2
+        },
+        {
+            "i": 4,
+            "j": 0,
+            "action": "Exit",
+            "tint": 3
+        }
+    ],
+    "hands": [
+        {
+            "i": 3,
+            "j": 1,
+            "angle": 3,
+            "persist": false,
+            "trigger": 0
+        }
+    ],
+    "decos": [
+        {
+            "i": 2,
+            "j": 1,
+            "deco": 0
+        }
+    ],
+    "tutorial": [
+        "A turn of the crank,",
+        "Is a turn of the hand."
+    ]
+}
