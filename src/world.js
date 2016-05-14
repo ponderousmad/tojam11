@@ -745,7 +745,7 @@ var WORLD = (function () {
             sweeping |= this.replayers[r].update(this, now, elapsed);
         }
 
-        if (!sweeping && this.stepTimer !== null) {
+        if (!sweeping && !this.triggering() && this.stepTimer !== null) {
             this.stepTimer -= elapsed;
 
             if (this.stepTimer < 0) {
@@ -1289,7 +1289,8 @@ var WORLD = (function () {
         } else if(trigger.action == TRIGGER_ACTIONS.Exit) {
             victorySound.play();
             
-            if (agent != this.player) {
+            var isPlayer = (agent == this.player);
+            if (!isPlayer) {
                 var i = agent.i,
                     j = agent.j;
                 agent.i = this.player.i;
@@ -1298,7 +1299,7 @@ var WORLD = (function () {
                 this.player.j = j;
             }
 
-            this.player.win();
+            this.player.win(isPlayer);
         }
     };
     

@@ -13,6 +13,7 @@ var AGENT = (function () {
         replayerAnim = new BLIT.Flip(batch, "mouse-B-idle_", 20, 2).setupPlayback(PLAYER_FRAME_TIME, true),
         replayerRewind = new BLIT.Flip(batch, "mouse-B-rewind-00_", 10, 2).setupPlayback(REWIND_FRAME_TIME, true),
         replayerDeathFlip = new BLIT.Flip(batch, "mouse-B-dead_", DEATH_FRAMES, 2),
+        replayerWinFlip = new BLIT.Flip(batch, "mouse-hole-B_", 16, 2),
         splatImage = batch.load("splat.png"),
         loopAnims = [
             playerAnim, playerRewind, replayerAnim, replayerRewind
@@ -151,8 +152,9 @@ var AGENT = (function () {
         this.deathAnim = playerDeathFlip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
 
-    Player.prototype.win = function () {
-        this.winAnim = playerWinFlip.setupPlayback(PLAYER_FRAME_TIME, false);
+    Player.prototype.win = function (isPlayer) {
+        var flip = isPlayer ? playerWinFlip : replayerWinFlip;
+        this.winAnim = flip.setupPlayback(PLAYER_FRAME_TIME, false);
     };
 
     Player.prototype.updating = function () {
