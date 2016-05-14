@@ -1152,6 +1152,19 @@ var WORLD = (function () {
             this.decos[d].draw(context, this, scale);
         }
         
+        var levelNumber = "" + (puzzleIndex + 1),
+            levelWidth = wordLevel.width * scale,
+            levelDigitWidth = levelDigits[0].width * scale,
+            levelY = -this.tileHeight * 0.75,
+            levelX = (this.totalWidth() - (levelWidth + levelDigitWidth * levelNumber.length)) * 0.5;
+        BLIT.draw(context, wordLevel, levelX, levelY, BLIT.ALIGN.Left, levelWidth, wordLevel.height * scale);
+        levelX += levelWidth;
+        for (var levelDigit = 0; levelDigit < levelNumber.length; ++levelDigit) {
+            var digitImage = levelDigits[parseInt(levelNumber[levelDigit], 10)];
+            BLIT.draw(context, digitImage, levelX, levelY, BLIT.ALIGN.Left, levelDigitWidth, digitImage.height * scale);
+            levelX += levelDigitWidth;
+        }
+        
         if (this.resettingAnim !== null) {
             context.globalAlpha = 1 - this.resettingAnim.fractionComplete;
         }
@@ -1226,20 +1239,7 @@ var WORLD = (function () {
         BLIT.draw(context, rewindPanel, 2.25 * this.tileWidth, uiY, BLIT.ALIGN.Center, rewindPanel.width * uiScale, rewindPanel.height * uiScale);
         BLIT.centeredText(context, moveText, this.tileWidth, uiY + 6, "#ff9c00", shadow, 1);
         BLIT.centeredText(context, replayText, 2.25 * this.tileWidth, uiY + 6, "rgb(255,255,0)", shadow, 1);
-        
-        var levelNumber = "" + (puzzleIndex + 1),
-            levelWidth = wordLevel.width * scale,
-            levelDigitWidth = levelDigits[0].width * scale,
-            levelY = -this.tileHeight * 0.75,
-            levelX = (this.totalWidth() - (levelWidth + levelDigitWidth * levelNumber.length)) * 0.5;
-        BLIT.draw(context, wordLevel, levelX, levelY, BLIT.ALIGN.Left, levelWidth, wordLevel.height * scale);
-        levelX += levelWidth;
-        for (var levelDigit = 0; levelDigit < levelNumber.length; ++levelDigit) {
-            var digitImage = levelDigits[parseInt(levelNumber[levelDigit], 10)];
-            BLIT.draw(context, digitImage, levelX, levelY, BLIT.ALIGN.Left, levelDigitWidth, digitImage.height * scale);
-            levelX += levelDigitWidth;
-        }
-        
+
         var reset = this.resettingAnim !== null ? this.resettingAnim : resetAnim;
         reset.draw(context, (this.width - 0.5) * this.tileWidth, (this.height + 0.25) * this.tileHeight, BLIT.ALIGN.Center, reset.width() * scale, reset.height() * scale);
         
