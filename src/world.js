@@ -91,7 +91,8 @@ var WORLD = (function () {
             "puzzles/puzzle5.json",
             "puzzles/puzzle6.json",
             "puzzles/puzzle7.json",
-            "puzzles/puzzle8.json"
+            "puzzles/puzzle8.json",
+            "puzzles/fin.json"
         ],
         clockTween = [
             [0.0, 0.00],
