@@ -603,6 +603,7 @@ var WORLD = (function () {
         this.triggers = [];
         this.hands = [];
         this.decos = [];
+        this.activatedTriggers = [];
         this.rewinder = new Rewinder();
         this.rewinding = false;
         this.resettingAnim = null;
@@ -627,6 +628,7 @@ var WORLD = (function () {
 
         this.stepTimer = null;
         this.stepIndex = 0;
+        this.activatedTriggers = [];
         this.rewinder = new Rewinder();
         this.rewinding = false;
         this.gameOver = false;
@@ -719,6 +721,15 @@ var WORLD = (function () {
                 this.reset();
             }
         }
+        
+        if (this.activatedTriggers.length > 0) {
+            var activated = this.activatedTriggers;
+            this.activatedTriggers = [];
+            for (var a = 0; a < activated.length; ++a) {
+                var activation = activated[a];
+                this.activateTrigger(activation.trigger, activation.agent);
+            }
+        }
 
         var sweeping = false;
         for (var h = 0; h < this.hands.length; ++h) {
@@ -779,7 +790,7 @@ var WORLD = (function () {
                 return true;
             }
         }
-        return false;
+        return this.activatedTriggers.length > 0;
     };
 
     World.prototype.updating = function () {
@@ -1210,10 +1221,12 @@ var WORLD = (function () {
         if (move !== null) {
             this.rewinder.add(new Unmove(agent, move, relocated));
         }
-        for (var t = 0; t < this.triggers.length; ++t) {
-            var trigger = this.triggers[t];
-            if (relocated && trigger.contains(agent)) {
-                this.activateTrigger(trigger, agent);
+        if (relocated) {
+            for (var t = 0; t < this.triggers.length; ++t) {
+                var trigger = this.triggers[t];
+                if (trigger.contains(agent)) {
+                    this.activatedTriggers.push({trigger: trigger, agent: agent});
+                }
             }
         }
     };
@@ -1222,16 +1235,20 @@ var WORLD = (function () {
         if (trigger.action == TRIGGER_ACTIONS.Clockwise || trigger.action == TRIGGER_ACTIONS.Counterclock) {
             crankSound.play();
             tickSound.play();
-            var pushed = [],
+            var pushes = [],
+                pushed = [],
                 unticks = [],
                 squishes = [];
             for (var h = 0; h < this.hands.length; ++h) {
                 var hand = this.hands[h];
                 if (hand.trigger == trigger) {
-                    var push = hand.turn();
-                    this.sweep(push, pushed, unticks, squishes);
+                    pushes.push(hand.turn());
                 }
             }
+            for (var p = 0; p < pushes.length; ++p) {
+                this.sweep(pushes[p], pushed, unticks, squishes);
+            }
+            
             if (unticks.length > 0) {
                 this.rewinder.add(new Unticks(unticks));
             }
@@ -1401,6 +1418,7 @@ var WORLD = (function () {
         this.triggers = [];
         this.hands = [];
         this.decos = [];
+        this.activatedTriggers = [];
         this.replayers = [];
         this.rewinder = new Rewinder();
         this.rewinding = false;
