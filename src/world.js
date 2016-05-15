@@ -120,10 +120,10 @@ var WORLD = (function () {
             [1.0, 1.00]
         ],
         resetTutorial = [
-            "You have run out of moves.",
-            "Click the hourglass, or",
-            "press the spacebar to",
-            "completely reset the level."
+            "You are out of moves.",
+            "Click the hourglass,",
+            "or press 'r' to",
+            "reset the level."
         ],
         puzzleIndex = 0,
         editArea = null;
@@ -730,7 +730,7 @@ var WORLD = (function () {
             return true;
         }
        
-        if (keyboard.wasKeyPressed(IO.KEYS.Space) || this.clickedReset(pointer)) {
+        if (keyboard.wasKeyPressed(IO.KEYS.Space) || keyboard.wasAsciiPressed("R") || this.clickedReset(pointer)) {
             if (this.editData !== null) {
                 this.reset();
             } else {
