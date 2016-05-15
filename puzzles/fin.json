@@ -17,6 +17,12 @@
             "j": 0,
             "action": "Exit",
             "tint": 5
+        },
+        {
+            "i": 3,
+            "j": 3,
+            "action": "Alarm",
+            "tint": 0
         }
     ],
     "hands": [
