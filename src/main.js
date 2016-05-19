@@ -40,7 +40,7 @@ var MAIN = (function (game, updateInterval, updateInDraw) {
                 if (game) {
                     game.update(now, elapsed, keyboard, pointer);
                 } else {
-                    testFlip.updatePlayback(elapsed);
+                    testFlip.update(elapsed);
                 }
                 
                 keyboard.postUpdate();
@@ -62,7 +62,7 @@ var MAIN = (function (game, updateInterval, updateInDraw) {
             if (game) {
                 game.draw(context, canvas.width, canvas.height);
             } else if (!BLIT.isPendingBatch()) {
-                BLIT.draw(context, testImage, 100, 100, BLIT.ALIGN.Center, 0, 0, BLIT.MIRROR.Horizontal);
+                BLIT.draw(context, testImage, 100, 100, BLIT.ALIGN.Center, 0, 0, BLIT.MIRROR.Horizontal, [1,0,0]);
                 testFlip.draw(context, 200, 50, BLIT.ALIGN.Left, 0, 0, BLIT.MIRROR.Vertical);
             }
         }
