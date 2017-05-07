@@ -105,13 +105,40 @@ var IO = (function (TICK, BLORT) {
         this.shift = false;
         this.ctrl = false;
         this.alt = false;
-        
+
+        // Polyfill 'buttons'
+        function mouseButtons(ev) {
+            if ('buttons' in ev) {
+                return ev.buttons;
+            } else if ('which' in ev) {
+                var b = ev.which;
+                if (b === 2) {
+                    return 4;
+                } else if (b === 3) {
+                    return 2;
+                } else if (b > 0) {
+                    return 1 << (b-1);
+                }
+            } else if ('button' in ev) {
+                var b = ev.button;
+                if (b === 1) {
+                    return 4;
+                } else if(b === 2) {
+                    return 2;
+                } else if(b >= 0) {
+                    return 1 << b;
+                }
+            }
+            return 0;
+        }
+
         var self = this;
         var updateState = function (event) {
             var bounds = element.getBoundingClientRect(),
-                left = (event.buttons & 1) == 1,
-                right = (event.buttons & 2) == 2,
-                middle = (event.buttons & 4) == 4;
+                buttons = mouseButtons(event),
+                left = (buttons & 1) == 1,
+                right = (buttons & 2) == 2,
+                middle = (buttons & 4) == 4;
 
             self.location = [event.clientX - bounds.left, event.clientY - bounds.top];
                       
@@ -215,7 +242,7 @@ var IO = (function (TICK, BLORT) {
     };
     
     return {
-        KEYS, KEYS,
+        KEYS: KEYS,
         Keyboard: Keyboard,
         Mouse: Mouse,
         Touch: Touch,
